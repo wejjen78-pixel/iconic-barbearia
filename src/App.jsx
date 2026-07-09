@@ -159,30 +159,31 @@ function Login({onProvisioned}){
 
   if(mode==="forgot")return <div style={{minHeight:"100vh",background:"#f3f4f6",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}><style>{CSS}</style><div style={{width:"100%",maxWidth:360}}>
     <div style={{textAlign:"center",marginBottom:24}}><LogoSVG height={140}/></div>
-    <div className="card" style={{padding:24}}>
+    <form className="card" style={{padding:24}} onSubmit={e=>{e.preventDefault();forgot();}}>
       <div style={{fontWeight:700,marginBottom:4}}>Esqueceu sua senha?</div>
       <div style={{fontSize:12,color:"#666",marginBottom:16}}>Digite seu e-mail e enviamos um link para redefinir.</div>
-      <div style={{marginBottom:16}}><span className="lbl">E-mail</span><input type="email" className="inp" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&forgot()}/></div>
+      <div style={{marginBottom:16}}><span className="lbl">E-mail</span><input type="email" name="email" autoComplete="email" className="inp" value={email} onChange={e=>setEmail(e.target.value)}/></div>
       {err&&<div style={{padding:"7px 11px",background:"#fef2f2",border:"1px solid #fecaca",borderRadius:6,marginBottom:13,fontSize:12,color:"#dc2626"}}>{err}</div>}
-      <button className="btn" style={{width:"100%"}} onClick={forgot} disabled={load}>{load?"...":"Enviar link"}</button>
+      <button type="submit" className="btn" style={{width:"100%"}} disabled={load}>{load?"...":"Enviar link"}</button>
       <div style={{textAlign:"center",marginTop:14,fontSize:12,color:"#888"}}><span style={{color:"#7c3aed",cursor:"pointer",fontWeight:600}} onClick={()=>{setMode("login");setErr("");}}>Voltar para login</span></div>
-    </div>
+    </form>
   </div></div>;
 
   return <div style={{minHeight:"100vh",background:"#f3f4f6",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}><style>{CSS}</style><div style={{width:"100%",maxWidth:360}}>
     <div style={{textAlign:"center",marginBottom:24}}><LogoSVG height={140}/></div>
-    <div className="card" style={{padding:24}}>
+    {/* form real com autoComplete correto: assim o navegador oferece salvar a senha e preenche sozinho da próxima vez */}
+    <form className="card" style={{padding:24}} autoComplete="on" onSubmit={e=>{e.preventDefault();mode==="signup"?signup():go();}}>
       {mode==="signup"&&<>
-        <div style={{marginBottom:13}}><span className="lbl">Nome da barbearia</span><input className="inp" value={shopName} onChange={e=>setShopName(e.target.value)}/></div>
-        <div style={{marginBottom:13}}><span className="lbl">Seu nome</span><input className="inp" value={donoNome} onChange={e=>setDonoNome(e.target.value)}/></div>
+        <div style={{marginBottom:13}}><span className="lbl">Nome da barbearia</span><input className="inp" name="organization" autoComplete="organization" value={shopName} onChange={e=>setShopName(e.target.value)}/></div>
+        <div style={{marginBottom:13}}><span className="lbl">Seu nome</span><input className="inp" name="name" autoComplete="name" value={donoNome} onChange={e=>setDonoNome(e.target.value)}/></div>
       </>}
-      <div style={{marginBottom:13}}><span className="lbl">E-mail</span><input type="email" className="inp" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&(mode==="signup"?signup():go())}/></div>
-      <div style={{marginBottom:8}}><span className="lbl">Senha</span><div style={{position:"relative"}}><input type={show?"text":"password"} className="inp" value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>e.key==="Enter"&&(mode==="signup"?signup():go())} style={{paddingRight:36}}/><button onClick={()=>setShow(s=>!s)} style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:"#aaa",cursor:"pointer"}}>{show?"🙈":"👁"}</button></div></div>
+      <div style={{marginBottom:13}}><span className="lbl">E-mail</span><input type="email" name="email" autoComplete="email" className="inp" value={email} onChange={e=>setEmail(e.target.value)}/></div>
+      <div style={{marginBottom:8}}><span className="lbl">Senha</span><div style={{position:"relative"}}><input type={show?"text":"password"} name="password" autoComplete={mode==="signup"?"new-password":"current-password"} className="inp" value={pw} onChange={e=>setPw(e.target.value)} style={{paddingRight:36}}/><button type="button" onClick={()=>setShow(s=>!s)} style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:"#aaa",cursor:"pointer"}}>{show?"🙈":"👁"}</button></div></div>
       {mode==="login"&&<div style={{textAlign:"right",marginBottom:8}}><span style={{fontSize:11,color:"#7c3aed",cursor:"pointer"}} onClick={()=>{setMode("forgot");setErr("");}}>Esqueceu a senha?</span></div>}
       {err&&<div style={{padding:"7px 11px",background:"#fef2f2",border:"1px solid #fecaca",borderRadius:6,marginBottom:13,fontSize:12,color:"#dc2626"}}>{err}</div>}
-      {mode==="login"?<button className="btn" style={{width:"100%"}} onClick={go} disabled={load}>{load?"...":"Entrar"}</button>:<button className="btn" style={{width:"100%"}} onClick={signup} disabled={load}>{load?"...":"Criar minha barbearia"}</button>}
+      <button type="submit" className="btn" style={{width:"100%"}} disabled={load}>{load?"...":mode==="login"?"Entrar":"Criar minha barbearia"}</button>
       <div style={{textAlign:"center",marginTop:14,fontSize:12,color:"#888"}}>{mode==="login"?<>Ainda não tem conta? <span style={{color:"#7c3aed",cursor:"pointer",fontWeight:600}} onClick={()=>{setMode("signup");setErr("");}}>Criar barbearia</span></>:<>Já tem conta? <span style={{color:"#7c3aed",cursor:"pointer",fontWeight:600}} onClick={()=>{setMode("login");setErr("");}}>Entrar</span></>}</div>
-    </div>
+    </form>
   </div></div>;
 }
 
@@ -199,16 +200,16 @@ function ResetPassword(){
   }
   return <div style={{minHeight:"100vh",background:"#f3f4f6",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}><style>{CSS}</style><div style={{width:"100%",maxWidth:360}}>
     <div style={{textAlign:"center",marginBottom:24}}><LogoSVG height={140}/></div>
-    <div className="card" style={{padding:24}}>
+    <form className="card" style={{padding:24}} onSubmit={e=>{e.preventDefault();go();}}>
       {done?<div style={{textAlign:"center"}}><div style={{fontSize:32,marginBottom:10}}>✅</div><div style={{fontWeight:700,marginBottom:8}}>Senha atualizada!</div><div style={{fontSize:13,color:"#666"}}>Já pode continuar usando o app normalmente.</div></div>:<>
         <div style={{fontWeight:700,marginBottom:4}}>Defina sua nova senha</div>
         <div style={{fontSize:12,color:"#666",marginBottom:16}}>Escolha uma senha nova para sua conta.</div>
-        <div style={{marginBottom:13}}><span className="lbl">Nova senha</span><input type="password" className="inp" value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>e.key==="Enter"&&go()}/></div>
-        <div style={{marginBottom:16}}><span className="lbl">Confirme a nova senha</span><input type="password" className="inp" value={pw2} onChange={e=>setPw2(e.target.value)} onKeyDown={e=>e.key==="Enter"&&go()}/></div>
+        <div style={{marginBottom:13}}><span className="lbl">Nova senha</span><input type="password" name="new-password" autoComplete="new-password" className="inp" value={pw} onChange={e=>setPw(e.target.value)}/></div>
+        <div style={{marginBottom:16}}><span className="lbl">Confirme a nova senha</span><input type="password" name="new-password-confirm" autoComplete="new-password" className="inp" value={pw2} onChange={e=>setPw2(e.target.value)}/></div>
         {err&&<div style={{padding:"7px 11px",background:"#fef2f2",border:"1px solid #fecaca",borderRadius:6,marginBottom:13,fontSize:12,color:"#dc2626"}}>{err}</div>}
-        <button className="btn" style={{width:"100%"}} onClick={go} disabled={load}>{load?"...":"Salvar nova senha"}</button>
+        <button type="submit" className="btn" style={{width:"100%"}} disabled={load}>{load?"...":"Salvar nova senha"}</button>
       </>}
-    </div>
+    </form>
   </div></div>;
 }
 
