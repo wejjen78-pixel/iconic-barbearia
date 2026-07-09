@@ -98,22 +98,57 @@ function BAv({b,size=30,fs=12}){if(b?.foto?.length>50)return <div style={{width:
 function EditModal({item,fields,barbs,onSave,onClose}){const[tmp,setTmp]=useState({...item});const upd=(k,v)=>setTmp(t=>({...t,[k]:v}));return <div style={{position:"fixed",inset:0,background:"#0008",zIndex:400,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={onClose}><div style={{background:"#fff",borderRadius:12,padding:24,width:"100%",maxWidth:440,maxHeight:"90vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}><div style={{fontWeight:700,fontSize:15,marginBottom:16}}>✏️ Editar</div>{fields.map(f=><div key={f.key} style={{marginBottom:11}}><span className="lbl">{f.label}</span>{f.type==="barbSelect"?<select className="inp" value={tmp[f.key]||1} onChange={e=>upd(f.key,+e.target.value)}>{barbs.map(b=><option key={b.id} value={b.id}>{b.nome}</option>)}</select>:f.type==="select"?<select className="inp" value={tmp[f.key]||""} onChange={e=>upd(f.key,e.target.value)}>{(f.options||[]).map(o=><option key={o}>{o}</option>)}</select>:f.type==="date"?<input type="date" className="inp" value={tmp[f.key]||""} onChange={e=>upd(f.key,e.target.value)}/>:f.type==="number"?<input type="number" className="inp" value={tmp[f.key]||0} onChange={e=>upd(f.key,parseFloat(e.target.value)||0)}/>:<input type="text" className="inp" value={tmp[f.key]||""} onChange={e=>upd(f.key,e.target.value)}/>}</div>)}<div style={{display:"flex",gap:10,marginTop:16}}><button className="btn" onClick={()=>onSave(tmp)}>Salvar</button><button className="bg" onClick={onClose}>Cancelar</button></div></div></div>;}
 function GrupoColapsavel({titulo,cor,qt,total,children,acoes,isPts=false}){const[open,setOpen]=useState(false);return <div style={{marginBottom:8}}><div className="grp-hd" onClick={()=>setOpen(o=>!o)}><div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:13}}>{open?"▼":"▶"}</span><span style={{fontWeight:600,fontSize:13,color:cor||"#1a1a2e"}}>{titulo}</span><span style={{background:cor+"18",color:cor,borderRadius:20,padding:"1px 8px",fontSize:11,fontWeight:600}}>{qt}x</span></div><div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontWeight:700,color:cor||"#1a1a2e"}}>{isPts?total+"pts":R(total)}</span>{acoes&&<div onClick={e=>e.stopPropagation()}>{acoes}</div>}</div></div>{open&&<div style={{border:"1px solid #e8e8f0",borderTop:"none",borderRadius:"0 0 7px 7px",overflow:"hidden"}}>{children}</div>}</div>;}
 
-// ── LOGIN (Supabase Auth) ───────────────────────────────────────────────────
-function Login(){
+// ── LOGIN / CADASTRO (Supabase Auth) ────────────────────────────────────────
+function Login({onProvisioned}){
+  const[mode,setMode]=useState("login"); // login | signup | check-email
   const[email,setEmail]=useState("");const[pw,setPw]=useState("");const[err,setErr]=useState("");const[load,setLoad]=useState(false);const[show,setShow]=useState(false);
+  const[shopName,setShopName]=useState("");const[donoNome,setDonoNome]=useState("");
+
   async function go(){
     setLoad(true);setErr("");
     const{error}=await supabase.auth.signInWithPassword({email:email.trim(),password:pw});
     if(error)setErr(error.message==="Invalid login credentials"?"E-mail ou senha incorretos.":error.message);
     setLoad(false);
   }
+
+  async function signup(){
+    if(!shopName.trim()||!donoNome.trim()||!email.trim()||!pw){setErr("Preencha todos os campos.");return;}
+    if(pw.length<6){setErr("A senha precisa ter pelo menos 6 caracteres.");return;}
+    setLoad(true);setErr("");
+    const{data,error}=await supabase.auth.signUp({email:email.trim(),password:pw});
+    if(error){setErr(error.message);setLoad(false);return;}
+    if(!data.session){
+      // e-mail de confirmação exigido nas configurações do projeto
+      setMode("check-email");setLoad(false);return;
+    }
+    const{error:rpcErr}=await supabase.rpc("create_my_organization",{org_name:shopName.trim(),dono_nome:donoNome.trim()});
+    if(rpcErr){setErr(rpcErr.message);setLoad(false);return;}
+    onProvisioned&&onProvisioned();
+    setLoad(false);
+  }
+
+  if(mode==="check-email")return <div style={{minHeight:"100vh",background:"#f3f4f6",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}><style>{CSS}</style><div style={{width:"100%",maxWidth:360}}>
+    <div style={{textAlign:"center",marginBottom:24}}><LogoSVG height={52}/></div>
+    <div className="card" style={{padding:24,textAlign:"center"}}>
+      <div style={{fontSize:32,marginBottom:10}}>📧</div>
+      <div style={{fontWeight:700,marginBottom:8}}>Confirme seu e-mail</div>
+      <div style={{fontSize:13,color:"#666",marginBottom:16}}>Enviamos um link de confirmação para <b>{email}</b>. Depois de confirmar, volte aqui e faça login.</div>
+      <button className="bg" style={{width:"100%"}} onClick={()=>setMode("login")}>Voltar para login</button>
+    </div>
+  </div></div>;
+
   return <div style={{minHeight:"100vh",background:"#f3f4f6",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}><style>{CSS}</style><div style={{width:"100%",maxWidth:360}}>
     <div style={{textAlign:"center",marginBottom:24}}><LogoSVG height={52}/></div>
     <div className="card" style={{padding:24}}>
-      <div style={{marginBottom:13}}><span className="lbl">E-mail</span><input type="email" className="inp" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&go()}/></div>
-      <div style={{marginBottom:16}}><span className="lbl">Senha</span><div style={{position:"relative"}}><input type={show?"text":"password"} className="inp" value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>e.key==="Enter"&&go()} style={{paddingRight:36}}/><button onClick={()=>setShow(s=>!s)} style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:"#aaa",cursor:"pointer"}}>{show?"🙈":"👁"}</button></div></div>
+      {mode==="signup"&&<>
+        <div style={{marginBottom:13}}><span className="lbl">Nome da barbearia</span><input className="inp" value={shopName} onChange={e=>setShopName(e.target.value)}/></div>
+        <div style={{marginBottom:13}}><span className="lbl">Seu nome</span><input className="inp" value={donoNome} onChange={e=>setDonoNome(e.target.value)}/></div>
+      </>}
+      <div style={{marginBottom:13}}><span className="lbl">E-mail</span><input type="email" className="inp" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&(mode==="signup"?signup():go())}/></div>
+      <div style={{marginBottom:16}}><span className="lbl">Senha</span><div style={{position:"relative"}}><input type={show?"text":"password"} className="inp" value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>e.key==="Enter"&&(mode==="signup"?signup():go())} style={{paddingRight:36}}/><button onClick={()=>setShow(s=>!s)} style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:"#aaa",cursor:"pointer"}}>{show?"🙈":"👁"}</button></div></div>
       {err&&<div style={{padding:"7px 11px",background:"#fef2f2",border:"1px solid #fecaca",borderRadius:6,marginBottom:13,fontSize:12,color:"#dc2626"}}>{err}</div>}
-      <button className="btn" style={{width:"100%"}} onClick={go} disabled={load}>{load?"...":"Entrar"}</button>
+      {mode==="login"?<button className="btn" style={{width:"100%"}} onClick={go} disabled={load}>{load?"...":"Entrar"}</button>:<button className="btn" style={{width:"100%"}} onClick={signup} disabled={load}>{load?"...":"Criar minha barbearia"}</button>}
+      <div style={{textAlign:"center",marginTop:14,fontSize:12,color:"#888"}}>{mode==="login"?<>Ainda não tem conta? <span style={{color:"#7c3aed",cursor:"pointer",fontWeight:600}} onClick={()=>{setMode("signup");setErr("");}}>Criar barbearia</span></>:<>Já tem conta? <span style={{color:"#7c3aed",cursor:"pointer",fontWeight:600}} onClick={()=>{setMode("login");setErr("");}}>Entrar</span></>}</div>
     </div>
   </div></div>;
 }
@@ -195,7 +230,8 @@ td:last-child{text-align:right;font-weight:600}
 // ── APP PRINCIPAL ─────────────────────────────────────────────────────────────
 export default function App(){
   const now=new Date();
-  const[session,setSession]=useState(null);const[profile,setProfile]=useState(null);const[orgNome,setOrgNome]=useState("");const[loadAuth,setLoadAuth]=useState(true);
+  const[session,setSession]=useState(null);const[profile,setProfile]=useState(null);const[orgNome,setOrgNome]=useState("");const[orgLogoUrl,setOrgLogoUrl]=useState(null);const[loadAuth,setLoadAuth]=useState(true);
+  const[profileTick,setProfileTick]=useState(0);
   useEffect(()=>{
     supabase.auth.getSession().then(({data})=>setSession(data.session));
     const{data:sub}=supabase.auth.onAuthStateChange((_event,sess)=>setSession(sess));
@@ -207,11 +243,11 @@ export default function App(){
     const{data:prof}=await supabase.from("profiles").select("*").eq("id",session.user.id).single();
     if(prof){
       setProfile(prof);
-      const{data:org}=await supabase.from("organizations").select("nome").eq("id",prof.org_id).single();
-      if(org)setOrgNome(org.nome);
+      const{data:org}=await supabase.from("organizations").select("nome,logo_url").eq("id",prof.org_id).single();
+      if(org){setOrgNome(org.nome);setOrgLogoUrl(org.logo_url||null);}
     }
     setLoadAuth(false);
-  })();},[session]);
+  })();},[session,profileTick]);
   const user=profile?{id:profile.id,nome:profile.nome,role:profile.role,bId:profile.barbeiro_id?+profile.barbeiro_id:null}:null;
   const logout=async()=>{await supabase.auth.signOut();};
   const isDono=user?.role==="dono";const isBarb=user?.role==="barb";
@@ -464,9 +500,38 @@ export default function App(){
     });
     setEditNm(false);
   };
+  const CORES_NOVO_BARB=["#7c3aed","#0891b2","#059669","#dc2626","#d97706","#db2777","#4f46e5"];
+  function addBarbeiro(){
+    const novoId=(barbs.reduce((max,b)=>Math.max(max,b.id),0))+1;
+    const cor=CORES_NOVO_BARB[barbs.length%CORES_NOVO_BARB.length];
+    setBarbs(bs=>[...bs,{id:novoId,nome:"Novo Barbeiro",cor,meta:5000,metaAssin:2500,metaAvulso:2500,foto:"",cnpj:""}]);
+    setNmsT(n=>[...n,"Novo Barbeiro"]);setMetT(m=>[...m,5000]);
+    addNotif("💈","Barbeiro adicionado — edite o nome");
+  }
+  function removeBarbeiro(id,idx){
+    if(!window.confirm("Remover este barbeiro? Lançamentos antigos dele deixam de aparecer nos totais."))return;
+    setBarbs(bs=>bs.filter(b=>b.id!==id));
+    setNmsT(n=>n.filter((_,j)=>j!==idx));setMetT(m=>m.filter((_,j)=>j!==idx));
+  }
   function delExtra(id){setExt(v=>v.filter(x=>x.id!==id));setExtAv(v=>v.filter(x=>x.id!==id));}
   function updExtra(item){setExt(v=>v.map(x=>x.id===item.id?item:x));setExtAv(v=>v.map(x=>x.id===item.id?item:x));}
   function uploadFoto(bId,e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=ev=>setBarbs(bs=>bs.map(b=>b.id===bId?{...b,foto:ev.target.result}:b));reader.readAsDataURL(file);}
+
+  const[logoUploading,setLogoUploading]=useState(false);const[logoErr,setLogoErr]=useState("");
+  async function uploadLogo(e){
+    const file=e.target.files[0];e.target.value="";if(!file||!orgId)return;
+    setLogoUploading(true);setLogoErr("");
+    const ext=file.name.split(".").pop();
+    const path=orgId+"/logo."+ext;
+    const{error:upErr}=await supabase.storage.from("logos").upload(path,file,{upsert:true,cacheControl:"3600"});
+    if(upErr){setLogoErr(upErr.message);setLogoUploading(false);return;}
+    const{data:pub}=supabase.storage.from("logos").getPublicUrl(path);
+    const url=pub.publicUrl+"?t="+Date.now();
+    const{error:updErr}=await supabase.from("organizations").update({logo_url:url}).eq("id",orgId);
+    if(updErr){setLogoErr(updErr.message);setLogoUploading(false);return;}
+    setOrgLogoUrl(url);addNotif("🖼️","Logo atualizado!");
+    setLogoUploading(false);
+  }
   function limparTudoBarbeiro(bId){if(!window.confirm("Excluir TODOS os lançamentos?"))return;setSvcs(v=>v.filter(s=>!(s.bId===bId&&noM(s.dt))));setAvul(v=>v.filter(s=>!(s.bId===bId&&noM(s.dt))));setExt(v=>v.filter(s=>!(s.bId===bId&&noM(s.dt))));setExtAv(v=>v.filter(s=>!(s.bId===bId&&noM(s.dt))));setProd(v=>v.filter(s=>!(s.bId===bId&&noM(s.dt))));setLote(v=>v.filter(s=>!(s.bId===bId&&noM(s.dt))));addNotif("🗑","Lançamentos apagados!");}
   function limparTudoPdf(){if(!window.confirm("Excluir TUDO importado via Excel?"))return;setSvcs(v=>v.filter(s=>!noM(s.dt)||s.src!=="pdf"));setAvul(v=>v.filter(s=>!noM(s.dt)||s.src!=="pdf"));setExt(v=>v.filter(s=>!noM(s.dt)||s.src!=="pdf"));setExtAv(v=>v.filter(s=>!noM(s.dt)||s.src!=="pdf"));setProd(v=>v.filter(s=>!noM(s.dt)||s.src!=="pdf"));addNotif("🗑","Importação removida!");}
   function hasPdfMes(){return sM.some(s=>s.src==="pdf")||aM.some(s=>s.src==="pdf")||[...eM,...eAM].some(s=>s.src==="pdf")||pM.some(p=>p.src==="pdf");}
@@ -542,7 +607,7 @@ export default function App(){
   function ERow({item,fields,setter,onDel,children}){return <div className="row"><div style={{display:"contents"}}>{children}</div><button onClick={()=>setEditModal({item,fields,setter,onSave:(tmp)=>{if(setter)setter(arr=>Array.isArray(arr)?arr.map(x=>x.id===tmp.id?tmp:x):arr);setEditModal(null);}})} style={{background:"none",border:"none",cursor:"pointer",color:"#bbb",flexShrink:0,fontSize:12}}>✏️</button><button className="bdel" onClick={()=>{if(onDel)onDel(item.id);else if(setter)setter(arr=>Array.isArray(arr)?arr.filter(x=>x.id!==item.id):arr);}}>×</button></div>;}
 
   if(loadAuth)return <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center"}}><style>{CSS}</style><span style={{color:"#aaa"}}>Carregando...</span></div>;
-  if(!session||!user)return <Login/>;
+  if(!session||!user)return <Login onProvisioned={()=>setProfileTick(t=>t+1)}/>;
 
   // ── MODO TV ────────────────────────────────────────────────────────────────
   if(tvMode&&isDono)return <div style={{position:"fixed",inset:0,background:"#0d0d1a",color:"#fff",zIndex:1000,display:"flex",flexDirection:"column"}}><style>{CSS}</style>
@@ -564,7 +629,7 @@ export default function App(){
     {notifs.length>0&&<div style={{position:"fixed",bottom:20,right:20,zIndex:998,maxWidth:280}}>{notifs.map(n=><div key={n.id} style={{background:"linear-gradient(135deg,#1a1a2e,#2d2d4e)",border:"1px solid #7c3aed40",color:"#fff",borderRadius:10,padding:"9px 14px",marginTop:7,fontSize:13,fontWeight:600}}>{n.icon} {n.msg}</div>)}</div>}
 
     <aside className="sb">
-      <div className="sblogo"><LogoSVG height={38} invert/><div className="brand">{orgNome}</div></div>
+      <div className="sblogo">{orgLogoUrl?<img src={orgLogoUrl} alt={orgNome} style={{maxHeight:38,maxWidth:"100%",display:"block",margin:"0 auto"}}/>:<div className="brand" style={{fontSize:17}}>{orgNome}</div>}</div>
       <nav className="sbnav">{abas.map(([k,v])=><div key={k} className={"ni"+(aba===k?" on":"")} onClick={()=>setAba(k)}>{aIcon(k)}<span>{v}</span></div>)}</nav>
       <div className="sbft"><div className="sfui"><div className="sfav">{isBarb&&getB(user.bId)?.foto?.length>50?<img src={getB(user.bId).foto} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/>:user.nome.charAt(0)}</div><div><div className="sfnm">{user.nome.split(" ")[0]}</div><div className="sfrole">{isDono?"Dono":"Barbeiro"}</div></div></div><div className="ni" style={{padding:"7px 0",color:"#ff6b6b",cursor:"pointer"}} onClick={logout}>{ICO.sair}<span style={{fontSize:12}}>Sair</span></div></div>
     </aside>
@@ -1213,9 +1278,21 @@ export default function App(){
 
 {/* ─── CONFIG ─── */}
 {aba==="cfg"&&isDono&&<div style={{display:"flex",flexDirection:"column",gap:14}}>
-  <div className="card" style={{borderLeft:"3px solid #7c3aed"}}><div className="st">🏢 Empresa</div><div className="g2"><div><span className="lbl">CNPJ Barbearia</span><input className="inp" value={cnpj} onChange={e=>setCnpj(e.target.value)}/></div><div><span className="lbl">Meta mensal</span><div style={{display:"flex",gap:6}}><input className="inp" type="number" value={metaI} onChange={e=>setMetaI(e.target.value)}/><button className="btn bsm" onClick={()=>setMeta(parseFloat(metaI)||meta)}>OK</button></div></div></div></div>
+  <div className="card" style={{borderLeft:"3px solid #7c3aed"}}><div className="st">🏢 Empresa</div><div className="g2"><div><span className="lbl">CNPJ Barbearia</span><input className="inp" value={cnpj} onChange={e=>setCnpj(e.target.value)}/></div><div><span className="lbl">Meta mensal</span><div style={{display:"flex",gap:6}}><input className="inp" type="number" value={metaI} onChange={e=>setMetaI(e.target.value)}/><button className="btn bsm" onClick={()=>setMeta(parseFloat(metaI)||meta)}>OK</button></div></div></div>
+    <div style={{marginTop:14,paddingTop:14,borderTop:"1px solid #f0f0f5"}}>
+      <span className="lbl">Logo da barbearia (aparece no menu lateral)</span>
+      <div style={{display:"flex",alignItems:"center",gap:14,marginTop:6}}>
+        <div style={{width:60,height:60,borderRadius:8,background:"#3d3d3d",display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",flexShrink:0}}>{orgLogoUrl?<img src={orgLogoUrl} alt="" style={{maxWidth:"90%",maxHeight:"90%"}}/>:<span style={{color:"#fff",fontSize:10}}>{orgNome?.charAt(0)}</span>}</div>
+        <label className="btn bsm" style={{cursor:"pointer"}}>{logoUploading?"Enviando...":"⬆️ Trocar logo"}<input type="file" accept="image/*" style={{display:"none"}} onChange={uploadLogo} disabled={logoUploading}/></label>
+      </div>
+      {logoErr&&<div style={{marginTop:8,fontSize:12,color:"#dc2626"}}>{logoErr}</div>}
+    </div>
+  </div>
   <div className="card" style={{borderLeft:"3px solid #059669"}}><div className="st">💰 Taxas</div><div className="g2"><div><span className="lbl">Barbeiro (%)</span><input type="number" className="inp" value={txB} onChange={e=>{const v=+e.target.value||0;setTxB(v);setTxBar(100-v);}}/></div><div><span className="lbl">Barbearia (%)</span><input type="number" className="inp" value={txBar} onChange={e=>{const v=+e.target.value||0;setTxBar(v);setTxB(100-v);}}/></div></div><div style={{marginTop:8,fontSize:12,color:txB+txBar===100?"#059669":"#dc2626",fontWeight:600}}>{txB+txBar===100?"✓ Total 100%":"⚠️ "+( txB+txBar)+"%"}</div></div>
-  <div className="card" style={{borderLeft:"3px solid #0891b2"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}><div className="st" style={{marginBottom:0}}>💈 Barbeiros, metas e CNPJ</div>{editNm?<div style={{display:"flex",gap:8}}><button className="btn bsm" onClick={salvNomes}>Salvar</button><button className="bg bsm" onClick={()=>setEditNm(false)}>Cancelar</button></div>:<button className="bg" onClick={()=>{setNmsT(barbs.map(b=>b.nome));setMetT(barbs.map(b=>b.meta));setEditNm(true);}}>Editar</button>}</div>{barbs.map((b,i)=><div key={b.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:10,flexWrap:"wrap",padding:"8px 0",borderBottom:"1px solid #f0f0f5"}}><div style={{width:12,height:12,borderRadius:"50%",background:b.cor,flexShrink:0}}/><BAv b={b} size={24}/>{editNm?<><input className="inp" style={{flex:2,fontSize:12,padding:"5px 8px"}} value={nmsT[i]} onChange={e=>{const n=[...nmsT];n[i]=e.target.value;setNmsT(n);}}/><input className="inp" style={{flex:1,fontSize:12,padding:"5px 8px"}} type="number" value={metT[i]} onChange={e=>{const n=[...metT];n[i]=e.target.value;setMetT(n);}}/><input className="inp" style={{flex:2,fontSize:12,padding:"5px 8px"}} placeholder="CNPJ" value={b.cnpj||""} onChange={e=>setBarbs(bs=>bs.map((x,j)=>j===i?{...x,cnpj:e.target.value}:x))}/><input className="inp" style={{width:44,fontSize:16,padding:"4px 6px"}} type="color" value={b.cor} onChange={e=>setBarbs(bs=>bs.map((x,j)=>j===i?{...x,cor:e.target.value}:x))}/></>:<><span style={{fontWeight:600,fontSize:13,flex:1}}>{b.nome}</span><span style={{fontSize:11,color:"#aaa"}}>Meta: {R(b.meta)}</span><span style={{fontSize:11,color:"#7c3aed",fontFamily:"monospace"}}>{b.cnpj||"—"}</span></>}</div>)}
+  <div className="card" style={{borderLeft:"3px solid #0891b2"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}><div className="st" style={{marginBottom:0}}>💈 Barbeiros, metas e CNPJ</div>{editNm?<div style={{display:"flex",gap:8}}><button className="btn bsm" onClick={salvNomes}>Salvar</button><button className="bg bsm" onClick={()=>setEditNm(false)}>Cancelar</button></div>:<button className="bg" onClick={()=>{setNmsT(barbs.map(b=>b.nome));setMetT(barbs.map(b=>b.meta));setEditNm(true);}}>Editar</button>}</div>
+    {barbs.length===0&&<div style={{color:"#ccc",fontSize:12,padding:"10px 0"}}>Nenhum barbeiro cadastrado ainda.</div>}
+    {barbs.map((b,i)=><div key={b.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:10,flexWrap:"wrap",padding:"8px 0",borderBottom:"1px solid #f0f0f5"}}><div style={{width:12,height:12,borderRadius:"50%",background:b.cor,flexShrink:0}}/><BAv b={b} size={24}/>{editNm?<><input className="inp" style={{flex:2,fontSize:12,padding:"5px 8px"}} value={nmsT[i]} onChange={e=>{const n=[...nmsT];n[i]=e.target.value;setNmsT(n);}}/><input className="inp" style={{flex:1,fontSize:12,padding:"5px 8px"}} type="number" value={metT[i]} onChange={e=>{const n=[...metT];n[i]=e.target.value;setMetT(n);}}/><input className="inp" style={{flex:2,fontSize:12,padding:"5px 8px"}} placeholder="CNPJ" value={b.cnpj||""} onChange={e=>setBarbs(bs=>bs.map((x,j)=>j===i?{...x,cnpj:e.target.value}:x))}/><input className="inp" style={{width:44,fontSize:16,padding:"4px 6px"}} type="color" value={b.cor} onChange={e=>setBarbs(bs=>bs.map((x,j)=>j===i?{...x,cor:e.target.value}:x))}/><button className="bdel" onClick={()=>removeBarbeiro(b.id,i)}>×</button></>:<><span style={{fontWeight:600,fontSize:13,flex:1}}>{b.nome}</span><span style={{fontSize:11,color:"#aaa"}}>Meta: {R(b.meta)}</span><span style={{fontSize:11,color:"#7c3aed",fontFamily:"monospace"}}>{b.cnpj||"—"}</span></>}</div>)}
+    {editNm&&<button className="bg bsm" style={{marginTop:4}} onClick={addBarbeiro}>+ Adicionar barbeiro</button>}
     <div style={{marginTop:8}}><span className="lbl">Histórico de metas (últimas alterações)</span>{metaHist.length===0?<div style={{color:"#ccc",fontSize:12}}>Nenhuma alteração registrada ainda.</div>:metaHist.slice(0,10).map(h=><div key={h.id} style={{display:"flex",justifyContent:"space-between",padding:"4px 6px",fontSize:12,color:"#555"}}><span>{(getB(h.bId)||{nome:"?"}).nome.split(" ")[0]}</span><span>{R(h.valor)}</span><span style={{color:"#aaa"}}>{new Date(h.dt+"T12:00:00").toLocaleDateString("pt-BR")}</span></div>)}</div>
   </div>
   <div className="card" style={{borderLeft:"3px solid #059669"}}><div className="st">🎁 Metas de bonificação</div>{metasBon.map((m,i)=><div key={i} style={{display:"flex",gap:8,marginBottom:8,alignItems:"center",flexWrap:"wrap",padding:"8px 10px",background:"#fafafe",borderRadius:7}}><span style={{flex:2,fontSize:12,fontWeight:600}}>{m.nome}</span><div style={{flex:1,minWidth:60}}><span className="lbl">Meta</span><input type="number" className="inp" style={{fontSize:12,padding:"4px 7px"}} value={m.meta} onChange={e=>setMetasBon(l=>l.map((x,j)=>j===i?{...x,meta:+e.target.value||0}:x))}/></div><div style={{flex:1,minWidth:60}}><span className="lbl">Bônus R$</span><input type="number" className="inp" style={{fontSize:12,padding:"4px 7px"}} value={m.bon} onChange={e=>setMetasBon(l=>l.map((x,j)=>j===i?{...x,bon:+e.target.value||0}:x))}/></div><div style={{flex:1,minWidth:60}}><span className="lbl">R$/unit</span><input type="number" className="inp" style={{fontSize:12,padding:"4px 7px"}} value={m.vUnit||20} onChange={e=>setMetasBon(l=>l.map((x,j)=>j===i?{...x,vUnit:+e.target.value||0}:x))}/></div></div>)}</div>
