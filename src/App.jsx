@@ -60,7 +60,8 @@ const CSS=`
 .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 .shell{display:flex;min-height:100vh}
 .sb{width:220px;min-width:220px;background:#3d3d3d;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;flex-shrink:0}
-.sblogo{padding:18px 18px 14px;border-bottom:1px solid #ffffff12}
+.sblogo{padding:18px 18px 14px;border-bottom:1px solid #ffffff12;text-align:center}
+.sblogo img{margin:0 auto}
 .brand{font-size:15px;font-weight:700;color:#fff;margin-top:8px}.brand span{color:#a78bfa}
 .sub{font-size:11px;color:#ffffff55;margin-top:2px}
 .sbnav{flex:1;padding:8px 0}
