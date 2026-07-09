@@ -100,7 +100,7 @@ function GrupoColapsavel({titulo,cor,qt,total,children,acoes,isPts=false}){const
 
 // ── LOGIN / CADASTRO (Supabase Auth) ────────────────────────────────────────
 function Login({onProvisioned}){
-  const[mode,setMode]=useState("login"); // login | signup | check-email
+  const[mode,setMode]=useState("login"); // login | signup | check-email | forgot | forgot-sent
   const[email,setEmail]=useState("");const[pw,setPw]=useState("");const[err,setErr]=useState("");const[load,setLoad]=useState(false);const[show,setShow]=useState(false);
   const[shopName,setShopName]=useState("");const[donoNome,setDonoNome]=useState("");
 
@@ -109,6 +109,15 @@ function Login({onProvisioned}){
     const{error}=await supabase.auth.signInWithPassword({email:email.trim(),password:pw});
     if(error)setErr(error.message==="Invalid login credentials"?"E-mail ou senha incorretos.":error.message);
     setLoad(false);
+  }
+
+  async function forgot(){
+    if(!email.trim()){setErr("Digite seu e-mail.");return;}
+    setLoad(true);setErr("");
+    const redirectTo=window.location.origin+import.meta.env.BASE_URL;
+    const{error}=await supabase.auth.resetPasswordForEmail(email.trim(),{redirectTo});
+    if(error){setErr(error.message);setLoad(false);return;}
+    setMode("forgot-sent");setLoad(false);
   }
 
   async function signup(){
@@ -138,6 +147,28 @@ function Login({onProvisioned}){
     </div>
   </div></div>;
 
+  if(mode==="forgot-sent")return <div style={{minHeight:"100vh",background:"#f3f4f6",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}><style>{CSS}</style><div style={{width:"100%",maxWidth:360}}>
+    <div style={{textAlign:"center",marginBottom:24}}><LogoSVG height={52}/></div>
+    <div className="card" style={{padding:24,textAlign:"center"}}>
+      <div style={{fontSize:32,marginBottom:10}}>📬</div>
+      <div style={{fontWeight:700,marginBottom:8}}>Link enviado!</div>
+      <div style={{fontSize:13,color:"#666",marginBottom:16}}>Enviamos um link para redefinir sua senha para <b>{email}</b>. Clique nele para escolher uma nova senha.</div>
+      <button className="bg" style={{width:"100%"}} onClick={()=>{setMode("login");setErr("");}}>Voltar para login</button>
+    </div>
+  </div></div>;
+
+  if(mode==="forgot")return <div style={{minHeight:"100vh",background:"#f3f4f6",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}><style>{CSS}</style><div style={{width:"100%",maxWidth:360}}>
+    <div style={{textAlign:"center",marginBottom:24}}><LogoSVG height={52}/></div>
+    <div className="card" style={{padding:24}}>
+      <div style={{fontWeight:700,marginBottom:4}}>Esqueceu sua senha?</div>
+      <div style={{fontSize:12,color:"#666",marginBottom:16}}>Digite seu e-mail e enviamos um link para redefinir.</div>
+      <div style={{marginBottom:16}}><span className="lbl">E-mail</span><input type="email" className="inp" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&forgot()}/></div>
+      {err&&<div style={{padding:"7px 11px",background:"#fef2f2",border:"1px solid #fecaca",borderRadius:6,marginBottom:13,fontSize:12,color:"#dc2626"}}>{err}</div>}
+      <button className="btn" style={{width:"100%"}} onClick={forgot} disabled={load}>{load?"...":"Enviar link"}</button>
+      <div style={{textAlign:"center",marginTop:14,fontSize:12,color:"#888"}}><span style={{color:"#7c3aed",cursor:"pointer",fontWeight:600}} onClick={()=>{setMode("login");setErr("");}}>Voltar para login</span></div>
+    </div>
+  </div></div>;
+
   return <div style={{minHeight:"100vh",background:"#f3f4f6",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}><style>{CSS}</style><div style={{width:"100%",maxWidth:360}}>
     <div style={{textAlign:"center",marginBottom:24}}><LogoSVG height={52}/></div>
     <div className="card" style={{padding:24}}>
@@ -146,10 +177,37 @@ function Login({onProvisioned}){
         <div style={{marginBottom:13}}><span className="lbl">Seu nome</span><input className="inp" value={donoNome} onChange={e=>setDonoNome(e.target.value)}/></div>
       </>}
       <div style={{marginBottom:13}}><span className="lbl">E-mail</span><input type="email" className="inp" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&(mode==="signup"?signup():go())}/></div>
-      <div style={{marginBottom:16}}><span className="lbl">Senha</span><div style={{position:"relative"}}><input type={show?"text":"password"} className="inp" value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>e.key==="Enter"&&(mode==="signup"?signup():go())} style={{paddingRight:36}}/><button onClick={()=>setShow(s=>!s)} style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:"#aaa",cursor:"pointer"}}>{show?"🙈":"👁"}</button></div></div>
+      <div style={{marginBottom:8}}><span className="lbl">Senha</span><div style={{position:"relative"}}><input type={show?"text":"password"} className="inp" value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>e.key==="Enter"&&(mode==="signup"?signup():go())} style={{paddingRight:36}}/><button onClick={()=>setShow(s=>!s)} style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:"#aaa",cursor:"pointer"}}>{show?"🙈":"👁"}</button></div></div>
+      {mode==="login"&&<div style={{textAlign:"right",marginBottom:8}}><span style={{fontSize:11,color:"#7c3aed",cursor:"pointer"}} onClick={()=>{setMode("forgot");setErr("");}}>Esqueceu a senha?</span></div>}
       {err&&<div style={{padding:"7px 11px",background:"#fef2f2",border:"1px solid #fecaca",borderRadius:6,marginBottom:13,fontSize:12,color:"#dc2626"}}>{err}</div>}
       {mode==="login"?<button className="btn" style={{width:"100%"}} onClick={go} disabled={load}>{load?"...":"Entrar"}</button>:<button className="btn" style={{width:"100%"}} onClick={signup} disabled={load}>{load?"...":"Criar minha barbearia"}</button>}
       <div style={{textAlign:"center",marginTop:14,fontSize:12,color:"#888"}}>{mode==="login"?<>Ainda não tem conta? <span style={{color:"#7c3aed",cursor:"pointer",fontWeight:600}} onClick={()=>{setMode("signup");setErr("");}}>Criar barbearia</span></>:<>Já tem conta? <span style={{color:"#7c3aed",cursor:"pointer",fontWeight:600}} onClick={()=>{setMode("login");setErr("");}}>Entrar</span></>}</div>
+    </div>
+  </div></div>;
+}
+
+// ── DEFINIR NOVA SENHA (link de recuperação) ─────────────────────────────────
+function ResetPassword(){
+  const[pw,setPw]=useState("");const[pw2,setPw2]=useState("");const[err,setErr]=useState("");const[load,setLoad]=useState(false);const[done,setDone]=useState(false);
+  async function go(){
+    if(pw.length<6){setErr("A senha precisa ter pelo menos 6 caracteres.");return;}
+    if(pw!==pw2){setErr("As senhas não coincidem.");return;}
+    setLoad(true);setErr("");
+    const{error}=await supabase.auth.updateUser({password:pw});
+    if(error){setErr(error.message);setLoad(false);return;}
+    setDone(true);setLoad(false);
+  }
+  return <div style={{minHeight:"100vh",background:"#f3f4f6",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}><style>{CSS}</style><div style={{width:"100%",maxWidth:360}}>
+    <div style={{textAlign:"center",marginBottom:24}}><LogoSVG height={52}/></div>
+    <div className="card" style={{padding:24}}>
+      {done?<div style={{textAlign:"center"}}><div style={{fontSize:32,marginBottom:10}}>✅</div><div style={{fontWeight:700,marginBottom:8}}>Senha atualizada!</div><div style={{fontSize:13,color:"#666"}}>Já pode continuar usando o app normalmente.</div></div>:<>
+        <div style={{fontWeight:700,marginBottom:4}}>Defina sua nova senha</div>
+        <div style={{fontSize:12,color:"#666",marginBottom:16}}>Escolha uma senha nova para sua conta.</div>
+        <div style={{marginBottom:13}}><span className="lbl">Nova senha</span><input type="password" className="inp" value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>e.key==="Enter"&&go()}/></div>
+        <div style={{marginBottom:16}}><span className="lbl">Confirme a nova senha</span><input type="password" className="inp" value={pw2} onChange={e=>setPw2(e.target.value)} onKeyDown={e=>e.key==="Enter"&&go()}/></div>
+        {err&&<div style={{padding:"7px 11px",background:"#fef2f2",border:"1px solid #fecaca",borderRadius:6,marginBottom:13,fontSize:12,color:"#dc2626"}}>{err}</div>}
+        <button className="btn" style={{width:"100%"}} onClick={go} disabled={load}>{load?"...":"Salvar nova senha"}</button>
+      </>}
     </div>
   </div></div>;
 }
@@ -174,6 +232,60 @@ function CompleteSignup({onDone,onLogout}){
       {err&&<div style={{padding:"7px 11px",background:"#fef2f2",border:"1px solid #fecaca",borderRadius:6,marginBottom:13,fontSize:12,color:"#dc2626"}}>{err}</div>}
       <button className="btn" style={{width:"100%"}} onClick={go} disabled={load}>{load?"...":"Criar minha barbearia"}</button>
       <div style={{textAlign:"center",marginTop:14,fontSize:12,color:"#888"}}><span style={{color:"#7c3aed",cursor:"pointer",fontWeight:600}} onClick={onLogout}>Sair</span></div>
+    </div>
+  </div></div>;
+}
+
+// ── ASSISTENTE DE PRIMEIRO ACESSO ────────────────────────────────────────────
+function OnboardingWizard({orgNome,meta,txB,txBar,barbs,setBarbs,onSaveConfig,onFinish,onSkip}){
+  const[step,setStep]=useState(0);
+  const[metaTmp,setMetaTmp]=useState(String(meta));
+  const[txTmp,setTxTmp]=useState(txB);
+  const[novoNome,setNovoNome]=useState("");const[novaMeta,setNovaMeta]=useState("5000");
+  const CORES=["#7c3aed","#0891b2","#059669","#dc2626","#d97706","#db2777","#4f46e5"];
+  function addBarb(){
+    if(!novoNome.trim())return;
+    const novoId=(barbs.reduce((max,b)=>Math.max(max,b.id),0))+1;
+    const cor=CORES[barbs.length%CORES.length];
+    setBarbs(bs=>[...bs,{id:novoId,nome:novoNome.trim(),cor,meta:parseFloat(novaMeta)||5000,metaAssin:0,metaAvulso:0,foto:"",cnpj:""}]);
+    setNovoNome("");setNovaMeta("5000");
+  }
+  function removeBarb(id){setBarbs(bs=>bs.filter(b=>b.id!==id));}
+  const steps=["Bem-vindo","Configurações","Equipe","Pronto"];
+  return <div style={{minHeight:"100vh",background:"#f3f4f6",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}><style>{CSS}</style><div style={{width:"100%",maxWidth:460}}>
+    <div style={{display:"flex",justifyContent:"center",gap:6,marginBottom:18}}>{steps.map((s,i)=><div key={i} style={{width:i===step?24:8,height:8,borderRadius:4,background:i<=step?"#7c3aed":"#ddd",transition:"all .3s"}}/>)}</div>
+    <div className="card" style={{padding:28}}>
+      {step===0&&<div style={{textAlign:"center"}}>
+        <div style={{fontSize:40,marginBottom:10}}>💈</div>
+        <div style={{fontWeight:800,fontSize:19,marginBottom:8}}>Bem-vindo, {orgNome}!</div>
+        <div style={{fontSize:13,color:"#666",lineHeight:1.6,marginBottom:20}}>Vamos configurar sua barbearia em 3 passos rápidos: metas e taxas, sua equipe, e pronto — já pode começar a lançar dados.</div>
+        <button className="btn" style={{width:"100%"}} onClick={()=>setStep(1)}>Vamos começar</button>
+        <div style={{marginTop:12,fontSize:12,color:"#aaa",cursor:"pointer"}} onClick={onSkip}>Pular e ir direto pro dashboard</div>
+      </div>}
+      {step===1&&<div>
+        <div style={{fontWeight:700,fontSize:16,marginBottom:4}}>💰 Metas e taxas</div>
+        <div style={{fontSize:12,color:"#666",marginBottom:18}}>Você pode ajustar isso a qualquer momento em Config.</div>
+        <div style={{marginBottom:14}}><span className="lbl">Meta de faturamento mensal</span><input className="inp" type="number" value={metaTmp} onChange={e=>setMetaTmp(e.target.value)}/></div>
+        <div style={{marginBottom:14}}><span className="lbl">% de comissão do barbeiro (o resto fica com a barbearia)</span><input className="inp" type="number" value={txTmp} onChange={e=>setTxTmp(+e.target.value||0)}/><div style={{fontSize:11,color:"#888",marginTop:4}}>Barbeiro fica com {txTmp}%, barbearia fica com {100-txTmp}%</div></div>
+        <div style={{display:"flex",gap:10,marginTop:10}}><button className="bg" style={{flex:1}} onClick={()=>setStep(0)}>Voltar</button><button className="btn" style={{flex:2}} onClick={()=>{onSaveConfig(parseFloat(metaTmp)||10000,txTmp,100-txTmp);setStep(2);}}>Próximo</button></div>
+      </div>}
+      {step===2&&<div>
+        <div style={{fontWeight:700,fontSize:16,marginBottom:4}}>👥 Sua equipe</div>
+        <div style={{fontSize:12,color:"#666",marginBottom:14}}>Adicione seus barbeiros (dá pra adicionar mais depois em Config).</div>
+        <div style={{display:"flex",gap:8,marginBottom:12}}>
+          <input className="inp" style={{flex:2}} placeholder="Nome do barbeiro" value={novoNome} onChange={e=>setNovoNome(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addBarb()}/>
+          <input className="inp" style={{flex:1}} type="number" placeholder="Meta" value={novaMeta} onChange={e=>setNovaMeta(e.target.value)}/>
+          <button className="btn bsm" onClick={addBarb}>+</button>
+        </div>
+        {barbs.length===0?<div style={{color:"#ccc",fontSize:12,textAlign:"center",padding:"10px 0"}}>Nenhum barbeiro adicionado ainda.</div>:<div style={{marginBottom:10}}>{barbs.map(b=><div key={b.id} className="row"><div style={{width:10,height:10,borderRadius:"50%",background:b.cor,flexShrink:0}}/><span style={{flex:1,fontSize:13}}>{b.nome}</span><span style={{fontSize:11,color:"#888"}}>{R(b.meta)}</span><button className="bdel" onClick={()=>removeBarb(b.id)}>×</button></div>)}</div>}
+        <div style={{display:"flex",gap:10,marginTop:14}}><button className="bg" style={{flex:1}} onClick={()=>setStep(1)}>Voltar</button><button className="btn" style={{flex:2}} onClick={()=>setStep(3)}>Próximo</button></div>
+      </div>}
+      {step===3&&<div style={{textAlign:"center"}}>
+        <div style={{fontSize:40,marginBottom:10}}>🎉</div>
+        <div style={{fontWeight:800,fontSize:19,marginBottom:8}}>Tudo pronto!</div>
+        <div style={{fontSize:13,color:"#666",marginBottom:20}}>{barbs.length>0?`Sua equipe (${barbs.length} barbeiro${barbs.length>1?"s":""}) já está cadastrada. Você pode começar a lançar dados agora.`:"Você pode adicionar sua equipe a qualquer momento em Config → Barbeiros."}</div>
+        <button className="btn" style={{width:"100%"}} onClick={onFinish}>Ir para o Dashboard</button>
+      </div>}
     </div>
   </div></div>;
 }
@@ -256,10 +368,10 @@ td:last-child{text-align:right;font-weight:600}
 export default function App(){
   const now=new Date();
   const[session,setSession]=useState(null);const[profile,setProfile]=useState(null);const[orgNome,setOrgNome]=useState("");const[orgLogoUrl,setOrgLogoUrl]=useState(null);const[loadAuth,setLoadAuth]=useState(true);
-  const[profileTick,setProfileTick]=useState(0);
+  const[profileTick,setProfileTick]=useState(0);const[passwordRecovery,setPasswordRecovery]=useState(false);
   useEffect(()=>{
     supabase.auth.getSession().then(({data})=>setSession(data.session));
-    const{data:sub}=supabase.auth.onAuthStateChange((_event,sess)=>setSession(sess));
+    const{data:sub}=supabase.auth.onAuthStateChange((event,sess)=>{if(event==="PASSWORD_RECOVERY")setPasswordRecovery(true);setSession(sess);});
     return()=>sub.subscription.unsubscribe();
   },[]);
   useEffect(()=>{(async()=>{
@@ -304,6 +416,7 @@ export default function App(){
   const[txB,setTxB]=useState(45);const[txBar,setTxBar]=useState(55);
   const[cnpj,setCnpj]=useState("");
   const[ss,setSs]=useState("idle");const[sv,setSv]=useState(null);const[loaded,setLoaded]=useState(false);
+  const[onboardingSkipped,setOnboardingSkipped]=useState(false);
   const stRef=useRef(null);
   const[editModal,setEditModal]=useState(null);const[barbSel,setBarbSel]=useState(1);
   const[aba,setAba]=useState("dash");
@@ -643,9 +756,11 @@ export default function App(){
 
   function ERow({item,fields,setter,onDel,children}){return <div className="row"><div style={{display:"contents"}}>{children}</div><button onClick={()=>setEditModal({item,fields,setter,onSave:(tmp)=>{if(setter)setter(arr=>Array.isArray(arr)?arr.map(x=>x.id===tmp.id?tmp:x):arr);setEditModal(null);}})} style={{background:"none",border:"none",cursor:"pointer",color:"#bbb",flexShrink:0,fontSize:12}}>✏️</button><button className="bdel" onClick={()=>{if(onDel)onDel(item.id);else if(setter)setter(arr=>Array.isArray(arr)?arr.filter(x=>x.id!==item.id):arr);}}>×</button></div>;}
 
+  if(passwordRecovery)return <ResetPassword/>;
   if(loadAuth)return <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center"}}><style>{CSS}</style><span style={{color:"#aaa"}}>Carregando...</span></div>;
   if(!session)return <Login onProvisioned={()=>setProfileTick(t=>t+1)}/>;
   if(!user)return <CompleteSignup onDone={()=>setProfileTick(t=>t+1)} onLogout={logout}/>;
+  if(isDono&&loaded&&barbs.length===0&&!onboardingSkipped)return <OnboardingWizard orgNome={orgNome} meta={meta} txB={txB} txBar={txBar} barbs={barbs} setBarbs={setBarbs} onSaveConfig={(m,tb,tr)=>{setMeta(m);setMetaI(String(m));setTxB(tb);setTxBar(tr);}} onFinish={()=>setOnboardingSkipped(true)} onSkip={()=>setOnboardingSkipped(true)}/>;
 
   // ── MODO TV ────────────────────────────────────────────────────────────────
   if(tvMode&&isDono)return <div style={{position:"fixed",inset:0,background:"#0d0d1a",color:"#fff",zIndex:1000,display:"flex",flexDirection:"column"}}><style>{CSS}</style>
