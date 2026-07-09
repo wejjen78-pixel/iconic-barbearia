@@ -1,6 +1,8 @@
 import{useState,useEffect,useRef,useCallback}from"react";
 import{BarChart,Bar,AreaChart,Area,XAxis,YAxis,Tooltip,ResponsiveContainer,CartesianGrid,ReferenceLine,RadarChart,PolarGrid,PolarAngleAxis,Radar}from"recharts";
 import{supabase}from"./lib/supabaseClient";
+import logoPreto from"./assets/logo-preto.png";
+import logoBranco from"./assets/logo-branco.png";
 
 // ── CONSTANTES ──────────────────────────────────────────────────────────────
 const FICHAS_DEF={"Club Premium - Cabelo (Ilimitado)":30,"Club Basic - Cabelo (Ter/Qua)":30,"Club Black - Cabelo":30,"Club Gold - Cabelo":30,"Retoque - Club Cabelo":30,"Club Premium - Cabelo & Barba (Ilimitado).":50,"Club Premium - Cabelo & Barba (Ilimitado)":50,"Club Basic - Cabelo & Barba (Ter/Qua)":50,"Club Gold - Cabelo & Barba":50,"Retoque - Club Cabelo & Barba":50,"Club - Barba":20,"Club - Pézinho + Barba":25,"Club - Pezinho + Barba":25,"Club - Pezinho":10,"Club - Pézinho":10};
@@ -8,12 +10,7 @@ const TIPO_FICHAS={corte:30,barba:20,cortebarba:50,acabbarba:25,pezinho:10};
 const SVC_DEF=[{nome:"Corte",v:40},{nome:"Corte e Barba",v:70},{nome:"Corte e Sobrancelha",v:55},{nome:"Corte + Barba e Sobrancelha",v:75},{nome:".Barba",v:30},{nome:"Pezinho e Barba",v:45},{nome:"Pézinho",v:15},{nome:"Corte e Pigmentação",v:60},{nome:"Corte, somente 1 pente.",v:35}];
 const EXT_DEF=["Sobrancelha","Depilação Nasal","Hidratação Barba","Hidratação Cabelo","Limpeza de pele","Pigmentação","Camuflagem Barba","Camuflagem Capilar","Selagem Capilar"];
 const MESES=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-const LogoSVG=({height=48,invert=false})=>{const c=invert?"#fff":"#111";return <svg height={height} viewBox="0 0 460 110" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect x="8" y="6" width="7" height="52" fill={c}/>
-  <polygon points="8,6 15,6 8,18" fill={c}/>
-  <text x="22" y="72" fontFamily="'Arial Black','Arial',sans-serif" fontWeight="900" fontSize="70" letterSpacing="-1" fill={c}>ICONIC</text>
-  <text x="24" y="100" fontFamily="Arial,sans-serif" fontWeight="300" fontSize="19" letterSpacing="9.5" fill={c}>BARBEARIA</text>
-</svg>;};
+const LogoSVG=({height=48,invert=false})=><img src={invert?logoBranco:logoPreto} alt="Iconic Barbearia" style={{height,display:"block"}}/>;
 
 const uid=()=>Math.random().toString(36).substr(2,8);
 const R=v=>(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
