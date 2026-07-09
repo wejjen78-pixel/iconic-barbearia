@@ -10,7 +10,7 @@ const TIPO_FICHAS={corte:30,barba:20,cortebarba:50,acabbarba:25,pezinho:10};
 const SVC_DEF=[{nome:"Corte",v:40},{nome:"Corte e Barba",v:70},{nome:"Corte e Sobrancelha",v:55},{nome:"Corte + Barba e Sobrancelha",v:75},{nome:".Barba",v:30},{nome:"Pezinho e Barba",v:45},{nome:"Pézinho",v:15},{nome:"Corte e Pigmentação",v:60},{nome:"Corte, somente 1 pente.",v:35}];
 const EXT_DEF=["Sobrancelha","Depilação Nasal","Hidratação Barba","Hidratação Cabelo","Limpeza de pele","Pigmentação","Camuflagem Barba","Camuflagem Capilar","Selagem Capilar"];
 const MESES=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-const LogoSVG=({height=48,invert=false})=><img src={invert?logoBranco:logoPreto} alt="Iconic App" style={{height,display:"block",borderRadius:6}}/>;
+const LogoSVG=({height=48,invert=false})=><img src={invert?logoBranco:logoPreto} alt="Iconic App" style={{height,display:"block",margin:"0 auto",borderRadius:8}}/>;
 
 const uid=()=>Math.random().toString(36).substr(2,8);
 const R=v=>(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
@@ -138,7 +138,7 @@ function Login({onProvisioned}){
   }
 
   if(mode==="check-email")return <div style={{minHeight:"100vh",background:"#f3f4f6",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}><style>{CSS}</style><div style={{width:"100%",maxWidth:360}}>
-    <div style={{textAlign:"center",marginBottom:24}}><LogoSVG height={52}/></div>
+    <div style={{textAlign:"center",marginBottom:24}}><LogoSVG height={140}/></div>
     <div className="card" style={{padding:24,textAlign:"center"}}>
       <div style={{fontSize:32,marginBottom:10}}>📧</div>
       <div style={{fontWeight:700,marginBottom:8}}>Confirme seu e-mail</div>
@@ -148,7 +148,7 @@ function Login({onProvisioned}){
   </div></div>;
 
   if(mode==="forgot-sent")return <div style={{minHeight:"100vh",background:"#f3f4f6",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}><style>{CSS}</style><div style={{width:"100%",maxWidth:360}}>
-    <div style={{textAlign:"center",marginBottom:24}}><LogoSVG height={52}/></div>
+    <div style={{textAlign:"center",marginBottom:24}}><LogoSVG height={140}/></div>
     <div className="card" style={{padding:24,textAlign:"center"}}>
       <div style={{fontSize:32,marginBottom:10}}>📬</div>
       <div style={{fontWeight:700,marginBottom:8}}>Link enviado!</div>
@@ -158,7 +158,7 @@ function Login({onProvisioned}){
   </div></div>;
 
   if(mode==="forgot")return <div style={{minHeight:"100vh",background:"#f3f4f6",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}><style>{CSS}</style><div style={{width:"100%",maxWidth:360}}>
-    <div style={{textAlign:"center",marginBottom:24}}><LogoSVG height={52}/></div>
+    <div style={{textAlign:"center",marginBottom:24}}><LogoSVG height={140}/></div>
     <div className="card" style={{padding:24}}>
       <div style={{fontWeight:700,marginBottom:4}}>Esqueceu sua senha?</div>
       <div style={{fontSize:12,color:"#666",marginBottom:16}}>Digite seu e-mail e enviamos um link para redefinir.</div>
@@ -170,7 +170,7 @@ function Login({onProvisioned}){
   </div></div>;
 
   return <div style={{minHeight:"100vh",background:"#f3f4f6",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}><style>{CSS}</style><div style={{width:"100%",maxWidth:360}}>
-    <div style={{textAlign:"center",marginBottom:24}}><LogoSVG height={52}/></div>
+    <div style={{textAlign:"center",marginBottom:24}}><LogoSVG height={140}/></div>
     <div className="card" style={{padding:24}}>
       {mode==="signup"&&<>
         <div style={{marginBottom:13}}><span className="lbl">Nome da barbearia</span><input className="inp" value={shopName} onChange={e=>setShopName(e.target.value)}/></div>
@@ -198,7 +198,7 @@ function ResetPassword(){
     setDone(true);setLoad(false);
   }
   return <div style={{minHeight:"100vh",background:"#f3f4f6",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}><style>{CSS}</style><div style={{width:"100%",maxWidth:360}}>
-    <div style={{textAlign:"center",marginBottom:24}}><LogoSVG height={52}/></div>
+    <div style={{textAlign:"center",marginBottom:24}}><LogoSVG height={140}/></div>
     <div className="card" style={{padding:24}}>
       {done?<div style={{textAlign:"center"}}><div style={{fontSize:32,marginBottom:10}}>✅</div><div style={{fontWeight:700,marginBottom:8}}>Senha atualizada!</div><div style={{fontSize:13,color:"#666"}}>Já pode continuar usando o app normalmente.</div></div>:<>
         <div style={{fontWeight:700,marginBottom:4}}>Defina sua nova senha</div>
@@ -223,7 +223,7 @@ function CompleteSignup({onDone,onLogout}){
     onDone&&onDone();
   }
   return <div style={{minHeight:"100vh",background:"#f3f4f6",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}><style>{CSS}</style><div style={{width:"100%",maxWidth:360}}>
-    <div style={{textAlign:"center",marginBottom:24}}><LogoSVG height={52}/></div>
+    <div style={{textAlign:"center",marginBottom:24}}><LogoSVG height={140}/></div>
     <div className="card" style={{padding:24}}>
       <div style={{fontWeight:700,marginBottom:4}}>Falta pouco!</div>
       <div style={{fontSize:12,color:"#666",marginBottom:16}}>Seu e-mail já está confirmado. Só falta criar sua barbearia.</div>
