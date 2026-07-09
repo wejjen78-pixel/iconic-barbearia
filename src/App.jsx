@@ -138,7 +138,7 @@ function Login({onProvisioned}){
   }
 
   if(mode==="check-email")return <div style={{minHeight:"100vh",background:"#f3f4f6",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}><style>{CSS}</style><div style={{width:"100%",maxWidth:360}}>
-    <div style={{textAlign:"center",marginBottom:24}}><LogoSVG height={140}/></div>
+    <div style={{textAlign:"center",marginBottom:24}}><LogoSVG height={60}/></div>
     <div className="card" style={{padding:24,textAlign:"center"}}>
       <div style={{fontSize:32,marginBottom:10}}>📧</div>
       <div style={{fontWeight:700,marginBottom:8}}>Confirme seu e-mail</div>
@@ -148,7 +148,7 @@ function Login({onProvisioned}){
   </div></div>;
 
   if(mode==="forgot-sent")return <div style={{minHeight:"100vh",background:"#f3f4f6",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}><style>{CSS}</style><div style={{width:"100%",maxWidth:360}}>
-    <div style={{textAlign:"center",marginBottom:24}}><LogoSVG height={140}/></div>
+    <div style={{textAlign:"center",marginBottom:24}}><LogoSVG height={60}/></div>
     <div className="card" style={{padding:24,textAlign:"center"}}>
       <div style={{fontSize:32,marginBottom:10}}>📬</div>
       <div style={{fontWeight:700,marginBottom:8}}>Link enviado!</div>
@@ -158,7 +158,7 @@ function Login({onProvisioned}){
   </div></div>;
 
   if(mode==="forgot")return <div style={{minHeight:"100vh",background:"#f3f4f6",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}><style>{CSS}</style><div style={{width:"100%",maxWidth:360}}>
-    <div style={{textAlign:"center",marginBottom:24}}><LogoSVG height={140}/></div>
+    <div style={{textAlign:"center",marginBottom:24}}><LogoSVG height={60}/></div>
     <form className="card" style={{padding:24}} onSubmit={e=>{e.preventDefault();forgot();}}>
       <div style={{fontWeight:700,marginBottom:4}}>Esqueceu sua senha?</div>
       <div style={{fontSize:12,color:"#666",marginBottom:16}}>Digite seu e-mail e enviamos um link para redefinir.</div>
@@ -170,7 +170,7 @@ function Login({onProvisioned}){
   </div></div>;
 
   return <div style={{minHeight:"100vh",background:"#f3f4f6",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}><style>{CSS}</style><div style={{width:"100%",maxWidth:360}}>
-    <div style={{textAlign:"center",marginBottom:24}}><LogoSVG height={140}/></div>
+    <div style={{textAlign:"center",marginBottom:24}}><LogoSVG height={60}/></div>
     {/* form real com autoComplete correto: assim o navegador oferece salvar a senha e preenche sozinho da próxima vez */}
     <form className="card" style={{padding:24}} autoComplete="on" onSubmit={e=>{e.preventDefault();mode==="signup"?signup():go();}}>
       {mode==="signup"&&<>
@@ -199,7 +199,7 @@ function ResetPassword(){
     setDone(true);setLoad(false);
   }
   return <div style={{minHeight:"100vh",background:"#f3f4f6",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}><style>{CSS}</style><div style={{width:"100%",maxWidth:360}}>
-    <div style={{textAlign:"center",marginBottom:24}}><LogoSVG height={140}/></div>
+    <div style={{textAlign:"center",marginBottom:24}}><LogoSVG height={60}/></div>
     <form className="card" style={{padding:24}} onSubmit={e=>{e.preventDefault();go();}}>
       {done?<div style={{textAlign:"center"}}><div style={{fontSize:32,marginBottom:10}}>✅</div><div style={{fontWeight:700,marginBottom:8}}>Senha atualizada!</div><div style={{fontSize:13,color:"#666"}}>Já pode continuar usando o app normalmente.</div></div>:<>
         <div style={{fontWeight:700,marginBottom:4}}>Defina sua nova senha</div>
@@ -224,7 +224,7 @@ function CompleteSignup({onDone,onLogout}){
     onDone&&onDone();
   }
   return <div style={{minHeight:"100vh",background:"#f3f4f6",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}><style>{CSS}</style><div style={{width:"100%",maxWidth:360}}>
-    <div style={{textAlign:"center",marginBottom:24}}><LogoSVG height={140}/></div>
+    <div style={{textAlign:"center",marginBottom:24}}><LogoSVG height={60}/></div>
     <div className="card" style={{padding:24}}>
       <div style={{fontWeight:700,marginBottom:4}}>Falta pouco!</div>
       <div style={{fontSize:12,color:"#666",marginBottom:16}}>Seu e-mail já está confirmado. Só falta criar sua barbearia.</div>
