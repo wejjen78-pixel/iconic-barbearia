@@ -1,7 +1,7 @@
 import{useState,useEffect,useRef,useCallback}from"react";
 import{BarChart,Bar,AreaChart,Area,XAxis,YAxis,Tooltip,ResponsiveContainer,CartesianGrid,ReferenceLine,RadarChart,PolarGrid,PolarAngleAxis,Radar}from"recharts";
 import{supabase}from"./lib/supabaseClient";
-import logoPreto from"./assets/logo-preto.png";
+import logoPreto from"./assets/iconic-app-logo.jpg";
 import logoBranco from"./assets/logo-branco.png";
 
 // ── CONSTANTES ──────────────────────────────────────────────────────────────
@@ -10,7 +10,7 @@ const TIPO_FICHAS={corte:30,barba:20,cortebarba:50,acabbarba:25,pezinho:10};
 const SVC_DEF=[{nome:"Corte",v:40},{nome:"Corte e Barba",v:70},{nome:"Corte e Sobrancelha",v:55},{nome:"Corte + Barba e Sobrancelha",v:75},{nome:".Barba",v:30},{nome:"Pezinho e Barba",v:45},{nome:"Pézinho",v:15},{nome:"Corte e Pigmentação",v:60},{nome:"Corte, somente 1 pente.",v:35}];
 const EXT_DEF=["Sobrancelha","Depilação Nasal","Hidratação Barba","Hidratação Cabelo","Limpeza de pele","Pigmentação","Camuflagem Barba","Camuflagem Capilar","Selagem Capilar"];
 const MESES=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-const LogoSVG=({height=48,invert=false})=><img src={invert?logoBranco:logoPreto} alt="Iconic Barbearia" style={{height,display:"block"}}/>;
+const LogoSVG=({height=48,invert=false})=><img src={invert?logoBranco:logoPreto} alt="Iconic App" style={{height,display:"block",borderRadius:6}}/>;
 
 const uid=()=>Math.random().toString(36).substr(2,8);
 const R=v=>(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
@@ -59,7 +59,7 @@ const CSS=`
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
 .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 .shell{display:flex;min-height:100vh}
-.sb{width:220px;min-width:220px;background:#3d3d3d;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;flex-shrink:0}
+.sb{width:220px;min-width:220px;background:#1a2f4a;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;flex-shrink:0}
 .sblogo{padding:18px 18px 14px;border-bottom:1px solid #ffffff12;text-align:center}
 .sblogo img{margin:0 auto}
 .brand{font-size:15px;font-weight:700;color:#fff;margin-top:8px}.brand span{color:#a78bfa}
@@ -1435,7 +1435,7 @@ export default function App(){
     <div style={{marginTop:14,paddingTop:14,borderTop:"1px solid #f0f0f5"}}>
       <span className="lbl">Logo da barbearia (aparece no menu lateral)</span>
       <div style={{display:"flex",alignItems:"center",gap:14,marginTop:6}}>
-        <div style={{width:60,height:60,borderRadius:8,background:"#3d3d3d",display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",flexShrink:0}}>{orgLogoUrl?<img src={orgLogoUrl} alt="" style={{maxWidth:"90%",maxHeight:"90%"}}/>:<span style={{color:"#fff",fontSize:10}}>{orgNome?.charAt(0)}</span>}</div>
+        <div style={{width:60,height:60,borderRadius:8,background:"#1a2f4a",display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",flexShrink:0}}>{orgLogoUrl?<img src={orgLogoUrl} alt="" style={{maxWidth:"90%",maxHeight:"90%"}}/>:<span style={{color:"#fff",fontSize:10}}>{orgNome?.charAt(0)}</span>}</div>
         <label className="btn bsm" style={{cursor:"pointer"}}>{logoUploading?"Enviando...":"⬆️ Trocar logo"}<input type="file" accept="image/*" style={{display:"none"}} onChange={uploadLogo} disabled={logoUploading}/></label>
       </div>
       {logoErr&&<div style={{marginTop:8,fontSize:12,color:"#dc2626"}}>{logoErr}</div>}
