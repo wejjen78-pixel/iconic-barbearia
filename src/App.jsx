@@ -115,14 +115,15 @@ function Login({onProvisioned}){
     if(!shopName.trim()||!donoNome.trim()||!email.trim()||!pw){setErr("Preencha todos os campos.");return;}
     if(pw.length<6){setErr("A senha precisa ter pelo menos 6 caracteres.");return;}
     setLoad(true);setErr("");
-    const{data,error}=await supabase.auth.signUp({email:email.trim(),password:pw});
+    // guarda nome da barbearia/dono nos metadados do usuário: se o Supabase exigir
+    // confirmação de e-mail, a organização só é criada depois, no primeiro login
+    // (ver App > efeito de perfil), usando esses metadados.
+    const{data,error}=await supabase.auth.signUp({email:email.trim(),password:pw,options:{data:{shop_name:shopName.trim(),dono_nome:donoNome.trim()}}});
     if(error){setErr(error.message);setLoad(false);return;}
     if(!data.session){
       // e-mail de confirmação exigido nas configurações do projeto
       setMode("check-email");setLoad(false);return;
     }
-    const{error:rpcErr}=await supabase.rpc("create_my_organization",{org_name:shopName.trim(),dono_nome:donoNome.trim()});
-    if(rpcErr){setErr(rpcErr.message);setLoad(false);return;}
     onProvisioned&&onProvisioned();
     setLoad(false);
   }
@@ -149,6 +150,30 @@ function Login({onProvisioned}){
       {err&&<div style={{padding:"7px 11px",background:"#fef2f2",border:"1px solid #fecaca",borderRadius:6,marginBottom:13,fontSize:12,color:"#dc2626"}}>{err}</div>}
       {mode==="login"?<button className="btn" style={{width:"100%"}} onClick={go} disabled={load}>{load?"...":"Entrar"}</button>:<button className="btn" style={{width:"100%"}} onClick={signup} disabled={load}>{load?"...":"Criar minha barbearia"}</button>}
       <div style={{textAlign:"center",marginTop:14,fontSize:12,color:"#888"}}>{mode==="login"?<>Ainda não tem conta? <span style={{color:"#7c3aed",cursor:"pointer",fontWeight:600}} onClick={()=>{setMode("signup");setErr("");}}>Criar barbearia</span></>:<>Já tem conta? <span style={{color:"#7c3aed",cursor:"pointer",fontWeight:600}} onClick={()=>{setMode("login");setErr("");}}>Entrar</span></>}</div>
+    </div>
+  </div></div>;
+}
+
+// ── COMPLETAR CADASTRO (conta autenticada sem barbearia vinculada ainda) ────
+function CompleteSignup({onDone,onLogout}){
+  const[shopName,setShopName]=useState("");const[donoNome,setDonoNome]=useState("");const[err,setErr]=useState("");const[load,setLoad]=useState(false);
+  async function go(){
+    if(!shopName.trim()||!donoNome.trim()){setErr("Preencha os dois campos.");return;}
+    setLoad(true);setErr("");
+    const{error}=await supabase.rpc("create_my_organization",{org_name:shopName.trim(),dono_nome:donoNome.trim()});
+    if(error){setErr(error.message);setLoad(false);return;}
+    onDone&&onDone();
+  }
+  return <div style={{minHeight:"100vh",background:"#f3f4f6",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}><style>{CSS}</style><div style={{width:"100%",maxWidth:360}}>
+    <div style={{textAlign:"center",marginBottom:24}}><LogoSVG height={52}/></div>
+    <div className="card" style={{padding:24}}>
+      <div style={{fontWeight:700,marginBottom:4}}>Falta pouco!</div>
+      <div style={{fontSize:12,color:"#666",marginBottom:16}}>Seu e-mail já está confirmado. Só falta criar sua barbearia.</div>
+      <div style={{marginBottom:13}}><span className="lbl">Nome da barbearia</span><input className="inp" value={shopName} onChange={e=>setShopName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&go()}/></div>
+      <div style={{marginBottom:16}}><span className="lbl">Seu nome</span><input className="inp" value={donoNome} onChange={e=>setDonoNome(e.target.value)} onKeyDown={e=>e.key==="Enter"&&go()}/></div>
+      {err&&<div style={{padding:"7px 11px",background:"#fef2f2",border:"1px solid #fecaca",borderRadius:6,marginBottom:13,fontSize:12,color:"#dc2626"}}>{err}</div>}
+      <button className="btn" style={{width:"100%"}} onClick={go} disabled={load}>{load?"...":"Criar minha barbearia"}</button>
+      <div style={{textAlign:"center",marginTop:14,fontSize:12,color:"#888"}}><span style={{color:"#7c3aed",cursor:"pointer",fontWeight:600}} onClick={onLogout}>Sair</span></div>
     </div>
   </div></div>;
 }
@@ -240,7 +265,19 @@ export default function App(){
   useEffect(()=>{(async()=>{
     if(!session){setProfile(null);setLoadAuth(false);return;}
     setLoadAuth(true);
-    const{data:prof}=await supabase.from("profiles").select("*").eq("id",session.user.id).single();
+    let{data:prof}=await supabase.from("profiles").select("*").eq("id",session.user.id).single();
+    if(!prof){
+      // sem perfil ainda: se o cadastro guardou nome da barbearia nos metadados
+      // (fluxo com confirmação de e-mail), provisiona a organização agora.
+      const meta=session.user.user_metadata;
+      if(meta?.shop_name){
+        const{error:rpcErr}=await supabase.rpc("create_my_organization",{org_name:meta.shop_name,dono_nome:meta.dono_nome||""});
+        if(!rpcErr){
+          const retry=await supabase.from("profiles").select("*").eq("id",session.user.id).single();
+          prof=retry.data;
+        }
+      }
+    }
     if(prof){
       setProfile(prof);
       const{data:org}=await supabase.from("organizations").select("nome,logo_url").eq("id",prof.org_id).single();
@@ -607,7 +644,8 @@ export default function App(){
   function ERow({item,fields,setter,onDel,children}){return <div className="row"><div style={{display:"contents"}}>{children}</div><button onClick={()=>setEditModal({item,fields,setter,onSave:(tmp)=>{if(setter)setter(arr=>Array.isArray(arr)?arr.map(x=>x.id===tmp.id?tmp:x):arr);setEditModal(null);}})} style={{background:"none",border:"none",cursor:"pointer",color:"#bbb",flexShrink:0,fontSize:12}}>✏️</button><button className="bdel" onClick={()=>{if(onDel)onDel(item.id);else if(setter)setter(arr=>Array.isArray(arr)?arr.filter(x=>x.id!==item.id):arr);}}>×</button></div>;}
 
   if(loadAuth)return <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center"}}><style>{CSS}</style><span style={{color:"#aaa"}}>Carregando...</span></div>;
-  if(!session||!user)return <Login onProvisioned={()=>setProfileTick(t=>t+1)}/>;
+  if(!session)return <Login onProvisioned={()=>setProfileTick(t=>t+1)}/>;
+  if(!user)return <CompleteSignup onDone={()=>setProfileTick(t=>t+1)} onLogout={logout}/>;
 
   // ── MODO TV ────────────────────────────────────────────────────────────────
   if(tvMode&&isDono)return <div style={{position:"fixed",inset:0,background:"#0d0d1a",color:"#fff",zIndex:1000,display:"flex",flexDirection:"column"}}><style>{CSS}</style>
