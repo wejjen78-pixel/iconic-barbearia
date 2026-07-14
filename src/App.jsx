@@ -1486,13 +1486,17 @@ export default function App(){
 {/* ─── CONFIG ─── */}
 {aba==="cfg"&&isDono&&<div style={{display:"flex",flexDirection:"column",gap:14}}>
   <div className="card" style={{borderLeft:"3px solid #7c3aed"}}><div className="st">🏢 Empresa</div><div className="g2"><div><span className="lbl">CNPJ Barbearia</span><input className="inp" value={cnpj} onChange={e=>setCnpj(e.target.value)}/></div><div><span className="lbl">Meta mensal</span><div style={{display:"flex",gap:6}}><input className="inp" type="number" value={metaI} onChange={e=>setMetaI(e.target.value)}/><button className="btn bsm" onClick={()=>setMeta(parseFloat(metaI)||meta)}>OK</button></div></div></div>
-    <div style={{marginTop:14,paddingTop:14,borderTop:"1px solid #f0f0f5"}}>
-      <span className="lbl">Logo da barbearia (aparece no menu lateral)</span>
-      <div style={{display:"flex",alignItems:"center",gap:14,marginTop:6}}>
-        <div style={{width:60,height:60,borderRadius:8,background:"#111",display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",flexShrink:0}}>{orgLogoUrl?<img src={orgLogoUrl} alt="" style={{maxWidth:"90%",maxHeight:"90%"}}/>:<span style={{color:"#fff",fontSize:10}}>{orgNome?.charAt(0)}</span>}</div>
-        <label className="btn bsm" style={{cursor:"pointer"}}>{logoUploading?"Enviando...":"⬆️ Trocar logo"}<input type="file" accept="image/*" style={{display:"none"}} onChange={uploadLogo} disabled={logoUploading}/></label>
+  </div>
+  <div className="card" style={{borderLeft:"3px solid #7c3aed"}}>
+    <div className="st">🖼️ Logo da barbearia</div>
+    <div style={{fontSize:12,color:"#888",marginBottom:14}}>Aparece no menu lateral do app. Use uma imagem quadrada ou horizontal, de preferência com fundo transparente.</div>
+    <div style={{display:"flex",alignItems:"center",gap:20,flexWrap:"wrap"}}>
+      <div style={{width:160,height:160,borderRadius:14,background:"#111",display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",flexShrink:0,border:"1px solid #e0e0f0"}}>{orgLogoUrl?<img src={orgLogoUrl} alt="" style={{maxWidth:"85%",maxHeight:"85%"}}/>:<span style={{color:"#fff",fontSize:44,fontWeight:800}}>{orgNome?.charAt(0)}</span>}</div>
+      <div style={{flex:1,minWidth:180}}>
+        <label className="btn" style={{cursor:"pointer",display:"inline-block"}}>{logoUploading?"Enviando...":"⬆️ Enviar novo logo"}<input type="file" accept="image/*" style={{display:"none"}} onChange={uploadLogo} disabled={logoUploading}/></label>
+        {logoErr&&<div style={{marginTop:8,fontSize:12,color:"#dc2626"}}>{logoErr}</div>}
+        {!orgLogoUrl&&<div style={{marginTop:8,fontSize:11,color:"#aaa"}}>Sem logo ainda — mostrando a inicial do nome da barbearia.</div>}
       </div>
-      {logoErr&&<div style={{marginTop:8,fontSize:12,color:"#dc2626"}}>{logoErr}</div>}
     </div>
   </div>
   <div className="card" style={{borderLeft:"3px solid #059669"}}><div className="st">💰 Taxas</div><div className="g2"><div><span className="lbl">Barbeiro (%)</span><input type="number" className="inp" value={txB} onChange={e=>{const v=+e.target.value||0;setTxB(v);setTxBar(100-v);}}/></div><div><span className="lbl">Barbearia (%)</span><input type="number" className="inp" value={txBar} onChange={e=>{const v=+e.target.value||0;setTxBar(v);setTxB(100-v);}}/></div></div><div style={{marginTop:8,fontSize:12,color:txB+txBar===100?"#059669":"#dc2626",fontWeight:600}}>{txB+txBar===100?"✓ Total 100%":"⚠️ "+( txB+txBar)+"%"}</div></div>
