@@ -454,6 +454,10 @@ export default function App(){
   const[instaForm,setInstaForm]=useState({bId:1,tipo:"story",qt:1,dt:hj()});
   const[histDe,setHistDe]=useState({m:(mes-5+12)%12,a:mes-5<0?ano-1:ano});
   const[histAte,setHistAte]=useState({m:mes,a:ano});
+  const[filtDe,setFiltDe]=useState(ano+"-"+String(mes+1).padStart(2,"0")+"-01");
+  const[filtAte,setFiltAte]=useState(hj());
+  const[barbFiltDe,setBarbFiltDe]=useState(ano+"-"+String(mes+1).padStart(2,"0")+"-01");
+  const[barbFiltAte,setBarbFiltAte]=useState(hj());
 
   function exportarBackup(){
     const dados={barbs,svcs,avul,ext,extAv,prod,pote,lote,assinD,assinV,vales,meta,prodLst,estoque,niveis,metasBon,txB,txBar,cnpj,coaching,metaHist,horasTrab,auditLog,instaMeta,instaLancamentos,desafioPessoal,_backup:new Date().toISOString()};
@@ -636,6 +640,8 @@ export default function App(){
     setFv(f=>({...f,dt:dtPadrao}));
     setFav2(f=>({...f,dt:dtPadrao}));
     setInstaForm(f=>({...f,dt:dtPadrao}));
+    setFiltDe(dtPadrao);setFiltAte(hj());
+    setBarbFiltDe(dtPadrao);setBarbFiltAte(hj());
   },[mes,ano]);
   useEffect(()=>{if(prodLst.length&&!fp.prod)setFp(f=>({...f,prod:prodLst[0].nome,val:prodLst[0].v}));},[prodLst]);
   const lanPote=()=>{const v=+fpo.val;if(!v)return;const q=+fpo.qt||1;for(let i=0;i<q;i++)setPote(e=>[{id:uid(),val:v,dt:fpo.dt,obs:fpo.obs},...e]);addNotif("💳","Galaxy Pay · "+R(v*q));setFpo(f=>({...f,val:"",obs:"",qt:1}));};
@@ -824,12 +830,38 @@ export default function App(){
     <KPI lbl="🛍️ Produtos" val={R(tProdBruto)} cor="#059669" glow/>
     <KPI lbl="🎁 Bônus" val={R(tBon)} cor="#0891b2"/>
   </div>
+  <KPI lbl="✂️🛍️ Avulso + Extras + Produtos (sem assinatura)" val={R(tSvcU+tExt+tProdBruto)} cor="#0891b2" glow/>
   <div className="g4">
     <KPI lbl="Total faturamento" val={R(fat)} cor="#7c3aed"/>
     <KPI lbl="Ticket médio" val={R(ticketM)} cor="#0891b2"/>
     <KPI lbl="Atendimentos" val={aM.reduce((a,s)=>a+s.qt,0)+[...eM,...eAM].length+lM.length}/>
     <KPI lbl="vs mês ant." val={(cresc>=0?"+":"")+cresc.toFixed(1)+"%"} cor={cresc>=0?"#059669":"#dc2626"}/>
   </div>
+  {isDono&&(()=>{
+    const inRange=dt=>dt>=filtDe&&dt<=filtAte;
+    const pP=pote.filter(e=>inRange(e.dt)).reduce((a,e)=>a+e.val,0);
+    const aP=avul.filter(s=>inRange(s.dt)).reduce((a,s)=>a+s.val*s.qt,0)+lote.filter(l=>inRange(l.dt)).reduce((a,l)=>a+l.vb,0);
+    const eP=[...ext,...extAv].filter(e=>inRange(e.dt)).reduce((a,e)=>a+e.val,0);
+    const prP=prod.filter(p=>inRange(p.dt)).reduce((a,p)=>a+p.val*p.qt,0);
+    const totP=pP+aP+eP+prP;
+    return <div className="card" style={{borderLeft:"4px solid #0891b2"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10,marginBottom:12}}>
+        <div className="st" style={{marginBottom:0}}>📅 Faturamento por período (livre, dia ou intervalo)</div>
+        <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+          <input type="date" className="inp" style={{width:"auto",fontSize:12,padding:"5px 8px"}} value={filtDe} onChange={e=>setFiltDe(e.target.value)}/>
+          <span style={{fontSize:11,color:"#aaa"}}>até</span>
+          <input type="date" className="inp" style={{width:"auto",fontSize:12,padding:"5px 8px"}} value={filtAte} onChange={e=>setFiltAte(e.target.value)}/>
+        </div>
+      </div>
+      <div className="g4">
+        <div style={{textAlign:"center",padding:"9px 10px",background:"#fffbeb",borderRadius:8}}><div style={{fontSize:10,color:"#d97706",fontWeight:700}}>💳 ASSINATURA</div><div style={{fontSize:16,fontWeight:800,color:"#d97706"}}>{R(pP)}</div></div>
+        <div style={{textAlign:"center",padding:"9px 10px",background:"#f5f3ff",borderRadius:8}}><div style={{fontSize:10,color:"#7c3aed",fontWeight:700}}>✂️ AVULSO</div><div style={{fontSize:16,fontWeight:800,color:"#7c3aed"}}>{R(aP)}</div></div>
+        <div style={{textAlign:"center",padding:"9px 10px",background:"#f0f9ff",borderRadius:8}}><div style={{fontSize:10,color:"#0891b2",fontWeight:700}}>⭐ EXTRAS</div><div style={{fontSize:16,fontWeight:800,color:"#0891b2"}}>{R(eP)}</div></div>
+        <div style={{textAlign:"center",padding:"9px 10px",background:"#f0fdf4",borderRadius:8}}><div style={{fontSize:10,color:"#059669",fontWeight:700}}>🛍️ PRODUTOS</div><div style={{fontSize:16,fontWeight:800,color:"#059669"}}>{R(prP)}</div></div>
+      </div>
+      <div style={{marginTop:10,padding:"9px 12px",background:"#1a1a2e",borderRadius:7,display:"flex",justifyContent:"space-between"}}><span style={{fontSize:12,color:"#ffffffcc",fontWeight:600}}>TOTAL NO PERÍODO</span><span style={{fontSize:15,fontWeight:800,color:"#fff"}}>{R(totP)}</span></div>
+    </div>;
+  })()}
   {dinhPerdido.length>0&&<div className="card" style={{borderLeft:"4px solid #dc2626",background:"#fef2f2"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}><div className="st" style={{marginBottom:0,color:"#dc2626"}}>💸 Oportunidades perdidas</div><div style={{fontWeight:800,color:"#dc2626"}}>{R(totalPerdido)}</div></div><div className="g3">{dinhPerdido.map((m,i)=><div key={i} style={{background:"#fff",border:"1px solid #fecaca",borderRadius:8,padding:"9px 11px"}}><div style={{fontSize:11,fontWeight:700,color:"#dc2626",marginBottom:2}}>{m.nome}</div><div style={{display:"flex",justifyContent:"space-between"}}><span style={{fontSize:17,fontWeight:700,color:"#dc2626"}}>-{m.faltam}</span><span style={{fontSize:11,color:"#888"}}>{m.realizado}/{m.meta}</span></div><PB val={m.realizado} max={m.meta} cor="#dc2626" pct={false}/><div style={{fontSize:11,color:"#dc2626",fontWeight:600,marginTop:3}}>{R(m.vPerdido)}</div></div>)}</div></div>}
   <div className="card"><div className="st">Faturamento diário</div><ResponsiveContainer width="100%" height={150}><BarChart data={gDia} margin={{top:4,right:4,left:-20,bottom:0}}><CartesianGrid strokeDasharray="3 3" stroke="#f0f0f5"/><XAxis dataKey="dia" tick={{fill:"#aaa",fontSize:10}} tickLine={false} axisLine={false} interval={3}/><YAxis tick={{fill:"#aaa",fontSize:10}} tickLine={false} axisLine={false} tickFormatter={v=>v>0?Math.round(v/1000)+"k":""}/><Tooltip content={<CT/>}/><ReferenceLine y={metaDia} stroke="#dc2626" strokeDasharray="4 2" strokeWidth={1.5}/><Bar dataKey="pote" name="Assinatura" stackId="a" fill="#d97706"/><Bar dataKey="svc" name="Serviços" stackId="a" fill="#7c3aed"/><Bar dataKey="ext" name="Extras" stackId="a" fill="#0891b2"/><Bar dataKey="prod" name="Produtos" stackId="a" fill="#059669" radius={[3,3,0,0]}/></BarChart></ResponsiveContainer></div>
   <div className="card"><div className="st">Ranking</div>{calcB.map((b,i)=><div key={b.id} style={{marginBottom:12}}><div style={{display:"flex",alignItems:"center",gap:10,marginBottom:5}}><span style={{width:20,height:20,borderRadius:"50%",background:i===0?"#d97706":i===1?"#888":i===2?"#b45309":"#f0f0f5",color:i<3?"#fff":"#888",display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:700,flexShrink:0}}>{i+1}</span><BAv b={getB(b.id)} size={32} fs={13}/><div style={{flex:1}}><div style={{fontWeight:600,fontSize:13}}>{b.nome.split(" ")[0]}</div><div style={{fontSize:11,color:"#aaa"}}>{b.ftot}pts · {b.atend} atend</div></div><div style={{textAlign:"right"}}><div style={{fontSize:15,fontWeight:700,color:b.cor}}>{R(b.totCBon)}</div><DB v={b.crescB}/></div></div><PB val={b.totCBon} max={maxC} cor={b.cor} pct={false}/></div>)}</div>
@@ -1146,6 +1178,27 @@ export default function App(){
       <div style={{padding:"8px 12px",background:"#1a1a2e",borderRadius:7,display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:13,fontWeight:700,color:"#fff"}}>LÍQUIDO A RECEBER</span><span style={{fontSize:18,fontWeight:800,color:"#a78bfa"}}>{R(bAtSel.cLiq)}</span></div>
       <button className="btn bsm" style={{background:"#dc2626",marginTop:10}} onClick={()=>limparTudoBarbeiro(bAtSel.id)}>🗑 Excluir tudo de {bAtSel.nome.split(" ")[0]}</button>
     </div>
+    {(()=>{
+      const inRange=dt=>dt>=barbFiltDe&&dt<=barbFiltAte;
+      const porDia={};
+      bAtSel.avB.filter(s=>inRange(s.dt)).forEach(s=>{porDia[s.dt]=(porDia[s.dt]||0)+s.val*s.qt;});
+      bAtSel.exB.filter(e=>inRange(e.dt)).forEach(e=>{porDia[e.dt]=(porDia[e.dt]||0)+e.val;});
+      bAtSel.prB.filter(p=>inRange(p.dt)).forEach(p=>{porDia[p.dt]=(porDia[p.dt]||0)+p.val*p.qt;});
+      bAtSel.lotB.filter(l=>inRange(l.dt)).forEach(l=>{porDia[l.dt]=(porDia[l.dt]||0)+l.vb;});
+      const melhores=Object.entries(porDia).map(([dt,val])=>({dt,val})).sort((a,b2)=>b2.val-a.val).slice(0,10);
+      const maxDia=melhores[0]?.val||1;
+      return <div className="card" style={{borderLeft:"4px solid #d97706"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10,marginBottom:12}}>
+          <div className="st" style={{marginBottom:0}}>🏆 Melhores dias de {bAtSel.nome.split(" ")[0]} <span style={{fontWeight:400,color:"#ccc"}}>(avulso+extras+produtos)</span></div>
+          <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+            <input type="date" className="inp" style={{width:"auto",fontSize:12,padding:"5px 8px"}} value={barbFiltDe} onChange={e=>setBarbFiltDe(e.target.value)}/>
+            <span style={{fontSize:11,color:"#aaa"}}>até</span>
+            <input type="date" className="inp" style={{width:"auto",fontSize:12,padding:"5px 8px"}} value={barbFiltAte} onChange={e=>setBarbFiltAte(e.target.value)}/>
+          </div>
+        </div>
+        {melhores.length===0?<div style={{color:"#ccc",fontSize:12,textAlign:"center",padding:10}}>Nenhum lançamento no período selecionado.</div>:melhores.map((d,i)=><div key={d.dt} style={{marginBottom:8}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}><span style={{fontSize:12,fontWeight:600}}>{i+1}º · {new Date(d.dt+"T12:00:00").toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit",year:"numeric",weekday:"short"})}</span><span style={{fontSize:13,fontWeight:700,color:"#d97706"}}>{R(d.val)}</span></div><PB val={d.val} max={maxDia} cor="#d97706" pct={false}/></div>)}
+      </div>;
+    })()}
     {(()=>{
       const hoje=new Date(hjS);const d7=new Date(hoje);d7.setDate(hoje.getDate()-7);
       const txL=txB/100;
