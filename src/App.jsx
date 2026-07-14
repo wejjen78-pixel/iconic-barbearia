@@ -689,6 +689,37 @@ export default function App(){
     setOrgLogoUrl(url);addNotif("🖼️","Logo atualizado!");
     setLogoUploading(false);
   }
+
+  // ── INTEGRAÇÃO GALAXPAY (Cel Cash) ─────────────────────────────────────────
+  const[galaxId,setGalaxId]=useState("");const[galaxHash,setGalaxHash]=useState("");
+  const[galaxStatus,setGalaxStatus]=useState(null);const[galaxSaving,setGalaxSaving]=useState(false);
+  const[galaxSyncing,setGalaxSyncing]=useState(false);const[galaxErr,setGalaxErr]=useState("");
+  const refreshGalaxStatus=useCallback(async()=>{
+    const{data,error}=await supabase.rpc("get_galaxpay_status");
+    if(!error&&data&&data[0])setGalaxStatus(data[0]);
+  },[]);
+  useEffect(()=>{if(orgId&&isDono)refreshGalaxStatus();},[orgId,isDono,refreshGalaxStatus]);
+  async function salvarGalaxCreds(){
+    if(!galaxId.trim()||!galaxHash.trim()){setGalaxErr("Preencha os dois campos.");return;}
+    setGalaxSaving(true);setGalaxErr("");
+    const{error}=await supabase.from("org_integrations").upsert({org_id:orgId,provider:"galaxpay",galax_id:galaxId.trim(),galax_hash:galaxHash.trim()},{onConflict:"org_id"});
+    if(error){setGalaxErr(error.message);setGalaxSaving(false);return;}
+    setGalaxId("");setGalaxHash("");addNotif("🔗","Credenciais GalaxPay salvas!");
+    await refreshGalaxStatus();setGalaxSaving(false);
+  }
+  async function sincronizarGalaxPay(){
+    setGalaxSyncing(true);setGalaxErr("");
+    const de=ano+"-"+String(mes+1).padStart(2,"0")+"-01";
+    const{data,error}=await supabase.functions.invoke("galaxpay-sync",{body:{startDate:de,endDate:hj()}});
+    if(error){setGalaxErr(error.message||"Falha ao sincronizar.");setGalaxSyncing(false);return;}
+    if(data?.error){setGalaxErr(data.error);setGalaxSyncing(false);return;}
+    addNotif("🔄",(data?.added||0)+" lançamento(s) importado(s) do GalaxPay!");
+    if(data?.added>0){
+      const{data:row}=await supabase.from("org_data").select("data").eq("org_id",orgId).single();
+      if(row?.data?.pote)setPote(row.data.pote);
+    }
+    await refreshGalaxStatus();setGalaxSyncing(false);
+  }
   function limparTudoBarbeiro(bId){if(!window.confirm("Excluir TODOS os lançamentos?"))return;setSvcs(v=>v.filter(s=>!(s.bId===bId&&noM(s.dt))));setAvul(v=>v.filter(s=>!(s.bId===bId&&noM(s.dt))));setExt(v=>v.filter(s=>!(s.bId===bId&&noM(s.dt))));setExtAv(v=>v.filter(s=>!(s.bId===bId&&noM(s.dt))));setProd(v=>v.filter(s=>!(s.bId===bId&&noM(s.dt))));setLote(v=>v.filter(s=>!(s.bId===bId&&noM(s.dt))));addNotif("🗑","Lançamentos apagados!");}
   function limparTudoPdf(){if(!window.confirm("Excluir TUDO importado via Excel?"))return;setSvcs(v=>v.filter(s=>!noM(s.dt)||s.src!=="pdf"));setAvul(v=>v.filter(s=>!noM(s.dt)||s.src!=="pdf"));setExt(v=>v.filter(s=>!noM(s.dt)||s.src!=="pdf"));setExtAv(v=>v.filter(s=>!noM(s.dt)||s.src!=="pdf"));setProd(v=>v.filter(s=>!noM(s.dt)||s.src!=="pdf"));addNotif("🗑","Importação removida!");}
   function hasPdfMes(){return sM.some(s=>s.src==="pdf")||aM.some(s=>s.src==="pdf")||[...eM,...eAM].some(s=>s.src==="pdf")||pM.some(p=>p.src==="pdf");}
@@ -1324,6 +1355,23 @@ export default function App(){
 
 {/* ─── GALAXY PAY ─── */}
 {aba==="gal"&&isDono&&<div style={{display:"flex",flexDirection:"column",gap:14}}>
+  <div className="card" style={{borderLeft:"3px solid #0891b2"}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8,marginBottom:6}}>
+      <div className="st" style={{marginBottom:0}}>🔗 Integração automática com GalaxPay (Cel Cash)</div>
+      {galaxStatus?.configured&&<span style={{fontSize:11,fontWeight:700,color:"#059669",background:"#dcfce7",padding:"2px 9px",borderRadius:20}}>✓ Conectado</span>}
+    </div>
+    <div style={{fontSize:12,color:"#888",marginBottom:14}}>Puxa automaticamente os pagamentos recebidos no GalaxPay (Pix/cartão/boleto) e lança direto no pote — sem digitar nada. As credenciais ficam guardadas com segurança e nunca aparecem de novo depois de salvas.</div>
+    <div className="g2" style={{marginBottom:10}}>
+      <div><span className="lbl">Galax ID</span><input className="inp" placeholder={galaxStatus?.configured?"•••• já salvo":"Ex: 5473"} value={galaxId} onChange={e=>setGalaxId(e.target.value)}/></div>
+      <div><span className="lbl">Galax Hash</span><input type="password" className="inp" placeholder={galaxStatus?.configured?"•••• já salvo":"Chave de acesso"} value={galaxHash} onChange={e=>setGalaxHash(e.target.value)}/></div>
+    </div>
+    {galaxErr&&<div style={{marginBottom:10,padding:"7px 11px",background:"#fef2f2",border:"1px solid #fecaca",borderRadius:6,fontSize:12,color:"#dc2626"}}>{galaxErr}</div>}
+    <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+      <button className="btn bsm" onClick={salvarGalaxCreds} disabled={galaxSaving}>{galaxSaving?"Salvando...":galaxStatus?.configured?"Atualizar credenciais":"Salvar credenciais"}</button>
+      {galaxStatus?.configured&&<button className="btn bsm" style={{background:"#0891b2"}} onClick={sincronizarGalaxPay} disabled={galaxSyncing}>{galaxSyncing?"Sincronizando...":"🔄 Sincronizar agora"}</button>}
+      {galaxStatus?.last_sync_at&&<span style={{fontSize:11,color:"#aaa"}}>Última sincronização: {new Date(galaxStatus.last_sync_at).toLocaleString("pt-BR")} · {galaxStatus.last_sync_count} novo(s)</span>}
+    </div>
+  </div>
   <div className="card" style={{borderLeft:"3px solid #d97706"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}><div className="st" style={{marginBottom:0}}>Taxas</div>{editTx?<div style={{display:"flex",gap:8}}><button className="btn bsm" onClick={()=>{setTxB(txTmp.b);setTxBar(txTmp.r);setEditTx(false);}}>Salvar</button><button className="bg bsm" onClick={()=>setEditTx(false)}>Cancelar</button></div>:<button className="bg" onClick={()=>{setTxTmp({b:txB,r:txBar});setEditTx(true);}}>Editar</button>}</div>{editTx?<div style={{display:"flex",gap:12}}><div style={{flex:1}}><span className="lbl">Barbeiro (%)</span><input type="number" className="inp" value={txTmp.b} onChange={e=>{const v=+e.target.value||0;setTxTmp({b:v,r:100-v});}}/></div><div style={{flex:1}}><span className="lbl">Barbearia (%)</span><input type="number" className="inp" value={txTmp.r} onChange={e=>{const v=+e.target.value||0;setTxTmp({r:v,b:100-v});}}/></div></div>:<div style={{display:"flex",gap:12}}><div style={{padding:"12px 18px",background:"#f3f0ff",borderRadius:8,textAlign:"center",flex:1}}><div style={{fontSize:11,color:"#7c3aed",fontWeight:600}}>Barbeiro</div><div style={{fontSize:24,fontWeight:700,color:"#7c3aed"}}>{txB}%</div></div><div style={{padding:"12px 18px",background:"#dcfce7",borderRadius:8,textAlign:"center",flex:1}}><div style={{fontSize:11,color:"#059669",fontWeight:600}}>Barbearia</div><div style={{fontSize:24,fontWeight:700,color:"#059669"}}>{txBar}%</div></div></div>}</div>
   <div className="card"><div className="st">Entrada do pote</div><div className="g3" style={{marginBottom:10}}><div><span className="lbl">Valor</span><input type="number" className="inp" value={fpo.val} onChange={e=>setFpo(f=>({...f,val:e.target.value}))}/></div><div style={{display:"flex",gap:6}}><div style={{flex:1}}><span className="lbl">Qtd</span><input type="number" className="inp" value={fpo.qt} min="1" onChange={e=>setFpo(f=>({...f,qt:e.target.value}))}/></div><div style={{flex:2}}><span className="lbl">Data</span><input type="date" className="inp" value={fpo.dt} onChange={e=>setFpo(f=>({...f,dt:e.target.value}))}/></div></div><div><span className="lbl">Obs</span><input type="text" className="inp" value={fpo.obs} onChange={e=>setFpo(f=>({...f,obs:e.target.value}))}/></div></div><button className="btn" onClick={lanPote}>+ Adicionar</button></div>
   <div className="g3"><KPI lbl="Pote" val={R(tPote)} cor="#d97706" glow/><KPI lbl="Total fichas" val={tFich+"pts"} cor="#7c3aed"/><KPI lbl="Valor ponto" val={R(vPt)} cor="#059669"/></div>
