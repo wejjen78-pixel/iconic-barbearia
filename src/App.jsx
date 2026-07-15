@@ -1162,12 +1162,13 @@ export default function App(){
     {b.pctM>=100&&<div className="celebrate" style={{marginTop:10,padding:"10px 14px",background:"linear-gradient(135deg,#059669,#0891b2)",borderRadius:8,textAlign:"center",color:"#fff",fontWeight:700,fontSize:13}}>🎉 Meta do mês batida! Parabéns.</div>}
   </div>
   {(()=>{
-    const qtAv=b.avB.reduce((a,s)=>a+(s.qt||1),0);
+    const qtAv=b.avB.reduce((a,s)=>a+(s.qt||1),0)+b.lotB.length;
+    const comAv=b.fAv*(txB/100);
     const ticketAv=qtAv>0?b.fAv/qtAv:0;
     return <div className="card" style={{borderLeft:"5px solid #7c3aed",background:"linear-gradient(135deg,#f5f3ff,#fff)"}}>
-      <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}><span style={{fontSize:18}}>🚀</span><span style={{fontSize:12,fontWeight:700,color:"#7c3aed",textTransform:"uppercase",letterSpacing:".04em"}}>Foco de crescimento — Avulso</span></div>
-      <div style={{fontSize:34,fontWeight:900,color:"#7c3aed",lineHeight:1.1}}>{R(b.fAv)}</div>
-      <div style={{fontSize:12,color:"#666",marginTop:4}}>{qtAv} atendimento{qtAv!==1?"s":""} avulso{qtAv!==1?"s":""} · ticket médio {R(ticketAv)}</div>
+      <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}><span style={{fontSize:18}}>🚀</span><span style={{fontSize:12,fontWeight:700,color:"#7c3aed",textTransform:"uppercase",letterSpacing:".04em"}}>Foco de crescimento — Sua comissão em Avulso</span></div>
+      <div style={{fontSize:34,fontWeight:900,color:"#7c3aed",lineHeight:1.1}}>{R(comAv)}</div>
+      <div style={{fontSize:12,color:"#666",marginTop:4}}>{qtAv} atendimento{qtAv!==1?"s":""} avulso{qtAv!==1?"s":""} · {R(b.fAv)} em vendas ({txB}% de comissão) · ticket médio {R(ticketAv)}</div>
       <div style={{fontSize:12,color:"#7c3aed",marginTop:8,fontWeight:600}}>É o avulso que está puxando o crescimento da barbearia — todo atendimento avulso a mais conta em dobro.</div>
     </div>;
   })()}
