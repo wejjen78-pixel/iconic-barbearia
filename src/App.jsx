@@ -1194,15 +1194,12 @@ export default function App(){
   </div>
   {(()=>{
     const qtAv=b.avB.reduce((a,s)=>a+(s.qt||1),0)+b.lotB.length;
-    const qtExt=b.exB.length;
-    const qtTot=qtAv+qtExt;
-    const fTot=b.fAv+b.fEx;
     const comTot=b.cAv;
-    const ticketTot=qtTot>0?fTot/qtTot:0;
+    const ticketAv=qtAv>0?b.fAv/qtAv:0;
     return <div className="card" style={{borderLeft:"5px solid #7c3aed",background:"linear-gradient(135deg,#f5f3ff,#fff)"}}>
       <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}><span style={{fontSize:18}}>🚀</span><span style={{fontSize:12,fontWeight:700,color:"#7c3aed",textTransform:"uppercase",letterSpacing:".04em"}}>Foco de crescimento — Sua comissão em Avulso</span></div>
       <div style={{fontSize:34,fontWeight:900,color:"#7c3aed",lineHeight:1.1}}>{R(comTot)}</div>
-      <div style={{fontSize:12,color:"#666",marginTop:4}}>{qtAv} avulso{qtAv!==1?"s":""} + {qtExt} extra{qtExt!==1?"s":""} · {R(fTot)} em vendas ({txB}% de comissão) · ticket médio {R(ticketTot)}</div>
+      <div style={{fontSize:12,color:"#666",marginTop:4}}>{qtAv} atendimento{qtAv!==1?"s":""} avulso{qtAv!==1?"s":""} · ticket médio {R(ticketAv)}</div>
       <div style={{fontSize:12,color:"#7c3aed",marginTop:8,fontWeight:600}}>É o avulso que está puxando o crescimento da barbearia — todo atendimento avulso a mais conta em dobro.</div>
     </div>;
   })()}
