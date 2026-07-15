@@ -1153,6 +1153,27 @@ export default function App(){
     <PB val={b.totC} max={b.metaB} cor={pctColor(b.pctM)} pct lbl={"Meta: "+R(b.metaB)} lg/>
     {b.pctM>=100&&<div className="celebrate" style={{marginTop:10,padding:"10px 14px",background:"linear-gradient(135deg,#059669,#0891b2)",borderRadius:8,textAlign:"center",color:"#fff",fontWeight:700,fontSize:13}}>🎉 Meta do mês batida! Parabéns.</div>}
   </div>
+  {(()=>{
+    const inRange=dt=>dt>=barbFiltDe&&dt<=barbFiltAte;
+    const porDia={};
+    b.avB.filter(s=>inRange(s.dt)).forEach(s=>{porDia[s.dt]=(porDia[s.dt]||0)+s.val*s.qt;});
+    b.exB.filter(e=>inRange(e.dt)).forEach(e=>{porDia[e.dt]=(porDia[e.dt]||0)+e.val;});
+    b.prB.filter(p=>inRange(p.dt)).forEach(p=>{porDia[p.dt]=(porDia[p.dt]||0)+p.val*p.qt;});
+    b.lotB.filter(l=>inRange(l.dt)).forEach(l=>{porDia[l.dt]=(porDia[l.dt]||0)+l.vb;});
+    const melhores=Object.entries(porDia).map(([dt,val])=>({dt,val})).sort((a,b2)=>b2.val-a.val).slice(0,10);
+    const maxDia=melhores[0]?.val||1;
+    return <div className="card" style={{borderLeft:"4px solid #d97706"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10,marginBottom:12}}>
+        <div className="st" style={{marginBottom:0}}>🏆 Meus melhores dias <span style={{fontWeight:400,color:"#ccc"}}>(avulso+extras+produtos)</span></div>
+        <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+          <input type="date" className="inp" style={{width:"auto",fontSize:12,padding:"5px 8px"}} value={barbFiltDe} onChange={e=>setBarbFiltDe(e.target.value)}/>
+          <span style={{fontSize:11,color:"#aaa"}}>até</span>
+          <input type="date" className="inp" style={{width:"auto",fontSize:12,padding:"5px 8px"}} value={barbFiltAte} onChange={e=>setBarbFiltAte(e.target.value)}/>
+        </div>
+      </div>
+      {melhores.length===0?<div style={{color:"#ccc",fontSize:12,textAlign:"center",padding:10}}>Nenhum lançamento no período selecionado.</div>:melhores.map((d,i)=><div key={d.dt} style={{marginBottom:8}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}><span style={{fontSize:12,fontWeight:600}}>{i+1}º · {new Date(d.dt+"T12:00:00").toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit",year:"numeric",weekday:"short"})}</span><span style={{fontSize:13,fontWeight:700,color:"#d97706"}}>{R(d.val)}</span></div><PB val={d.val} max={maxDia} cor="#d97706" pct={false}/></div>)}
+    </div>;
+  })()}
   <div className="card"><div className="st">💰 Breakdown</div>
     <div className="g3">
       <div style={{background:"#fffbeb",border:"2px solid #fde68a",borderRadius:10,padding:"12px 14px"}}><div style={{fontSize:10,color:"#d97706",fontWeight:700}}>💳 ASSINATURA</div><div style={{fontSize:22,fontWeight:800,color:"#d97706"}}>{R(b.cPote)}</div><div style={{fontSize:11,color:"#888"}}>{b.ftot}pts · {(b.pct*100).toFixed(1)}%</div></div>
