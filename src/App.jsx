@@ -499,9 +499,14 @@ export default function App(){
   const aTit=k=>({dash:"Dashboard",barb:"Barbeiro",lanc:"Lançamento",gal:"Galaxy Pay",assi:"Assinatura",extv:"Extras",insta:"📸 Instagram",rel:"Relatório",fech:"Fechamento",gest:"Gestão",equi:"Equipe",equiv:"Equipe",game:"Gamificação",intel:"Inteligência",pdf:"Importar Excel",cfg:"⚙️ Config",meu:"Meu Desempenho",estoque:"Estoque",pump:"PUMP",perf:"🎯 Centro de Performance"}[k]||k);
 
   // ── CARREGAR DADOS (Supabase) ────────────────────────────────────────────
+  const[loadError,setLoadError]=useState(null);const[loadTick,setLoadTick]=useState(0);
   useEffect(()=>{(async()=>{
     if(!orgId)return;
-    const{data:row}=await supabase.from("org_data").select("data").eq("org_id",orgId).single();
+    setLoadError(null);
+    const{data:row,error}=await supabase.from("org_data").select("data").eq("org_id",orgId).single();
+    // Se a busca falhar, NÃO marcamos como carregado — isso evita que o
+    // salvamento automático grave dados vazios por cima dos dados reais.
+    if(error){setLoadError(error.message);return;}
     const d=row?.data;
     if(d){
       if(d.barbs)setBarbs(d.barbs);
@@ -518,14 +523,15 @@ export default function App(){
       setSv(d._at||null);
     }
     setLoaded(true);
-  })();},[orgId]);
+  })();},[orgId,loadTick]);
 
   // ── AUTO-SAVE (Supabase) ─────────────────────────────────────────────────
-  useEffect(()=>{if(!loaded||!isDono||!orgId)return;if(stRef.current)clearTimeout(stRef.current);setSs("saving");stRef.current=setTimeout(async()=>{
+  // Nunca salva se o carregamento inicial não foi confirmado (evita sobrescrever dados reais com estado vazio).
+  useEffect(()=>{if(!loaded||!isDono||!orgId||loadError)return;if(stRef.current)clearTimeout(stRef.current);setSs("saving");stRef.current=setTimeout(async()=>{
     const payload={barbs,svcs,avul,ext,extAv,prod,pote,lote,assinD,assinV,vales,meta,prodLst,estoque,niveis,metasBon,txB,txBar,cnpj,coaching,metaHist,horasTrab,auditLog,instaMeta,instaLancamentos,desafioPessoal,desafio,_at:new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})};
     const{error}=await supabase.from("org_data").update({data:payload,atualizado_em:new Date().toISOString()}).eq("org_id",orgId);
     if(error){setSs("err");}else{setSv(payload._at);setSs("saved");setTimeout(()=>setSs("idle"),2500);}
-  },1200);},[barbs,svcs,avul,ext,extAv,prod,pote,lote,assinD,assinV,vales,meta,prodLst,estoque,niveis,metasBon,txB,txBar,cnpj,coaching,metaHist,horasTrab,auditLog,instaMeta,instaLancamentos,desafioPessoal,desafio,loaded,isDono,orgId]);
+  },1200);},[barbs,svcs,avul,ext,extAv,prod,pote,lote,assinD,assinV,vales,meta,prodLst,estoque,niveis,metasBon,txB,txBar,cnpj,coaching,metaHist,horasTrab,auditLog,instaMeta,instaLancamentos,desafioPessoal,desafio,loaded,isDono,orgId,loadError]);
 
   // ── CÁLCULOS ────────────────────────────────────────────────────────────────
   const dim=new Date(ano,mes+1,0).getDate();
@@ -800,6 +806,13 @@ export default function App(){
   if(loadAuth)return <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center"}}><style>{CSS}</style><span style={{color:"#aaa"}}>Carregando...</span></div>;
   if(!session)return <Login onProvisioned={()=>setProfileTick(t=>t+1)}/>;
   if(!user)return <CompleteSignup onDone={()=>setProfileTick(t=>t+1)} onLogout={logout}/>;
+  if(loadError)return <div style={{minHeight:"100vh",background:"#f3f4f6",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}><style>{CSS}</style><div style={{width:"100%",maxWidth:400}}><div className="card" style={{padding:24,textAlign:"center"}}>
+    <div style={{fontSize:32,marginBottom:10}}>⚠️</div>
+    <div style={{fontWeight:700,marginBottom:8}}>Não consegui carregar seus dados</div>
+    <div style={{fontSize:13,color:"#666",marginBottom:4}}>Isso é proposital: por segurança, o app não salva nada até confirmar que carregou seus dados reais primeiro — assim evitamos apagar algo por engano.</div>
+    <div style={{fontSize:11,color:"#aaa",marginBottom:16,fontFamily:"monospace"}}>{loadError}</div>
+    <button className="btn" style={{width:"100%"}} onClick={()=>setLoadTick(t=>t+1)}>Tentar de novo</button>
+  </div></div></div>;
   if(isDono&&loaded&&barbs.length===0&&!onboardingSkipped)return <OnboardingWizard orgNome={orgNome} meta={meta} txB={txB} txBar={txBar} barbs={barbs} setBarbs={setBarbs} onSaveConfig={(m,tb,tr)=>{setMeta(m);setMetaI(String(m));setTxB(tb);setTxBar(tr);}} onFinish={()=>setOnboardingSkipped(true)} onSkip={()=>setOnboardingSkipped(true)}/>;
 
   // ── MODO TV ────────────────────────────────────────────────────────────────
