@@ -425,6 +425,8 @@ export default function App(){
   const[pdfLoading,setPdfLoading]=useState(false);const[pdfProgress,setPdfProgress]=useState(0);
   const[pdfApplied,setPdfApplied]=useState(false);const[pdfErr,setPdfErr]=useState("");
   const[editQtdOpen,setEditQtdOpen]=useState(false);const[lastImportIds,setLastImportIds]=useState(null);
+  const[melhoresDiasOpen,setMelhoresDiasOpen]=useState(false);
+  const[meusMelhoresDiasOpen,setMeusMelhoresDiasOpen]=useState(false);
   const[fa,setFa]=useState({bId:1,svc:"Corte",val:40,dt:hj(),obs:"",qt:1,nota:5});
   const[flt,setFlt]=useState({bId:1,vb:"",dt:hj(),obs:""});
   const[ff,setFf]=useState({bId:1,svc:"Club Premium - Cabelo (Ilimitado)",dt:hj(),qt:1});
@@ -1163,15 +1165,15 @@ export default function App(){
     const melhores=Object.entries(porDia).map(([dt,val])=>({dt,val})).sort((a,b2)=>b2.val-a.val).slice(0,10);
     const maxDia=melhores[0]?.val||1;
     return <div className="card" style={{borderLeft:"4px solid #d97706"}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10,marginBottom:12}}>
-        <div className="st" style={{marginBottom:0}}>🏆 Meus melhores dias <span style={{fontWeight:400,color:"#ccc"}}>(avulso+extras+produtos)</span></div>
-        <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10,marginBottom:meusMelhoresDiasOpen?12:0,cursor:"pointer"}} onClick={()=>setMeusMelhoresDiasOpen(o=>!o)}>
+        <div className="st" style={{marginBottom:0}}>{meusMelhoresDiasOpen?"▼":"▶"} 🏆 Meus melhores dias <span style={{fontWeight:400,color:"#ccc"}}>(avulso+extras+produtos)</span></div>
+        {meusMelhoresDiasOpen&&<div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}} onClick={e=>e.stopPropagation()}>
           <input type="date" className="inp" style={{width:"auto",fontSize:12,padding:"5px 8px"}} value={barbFiltDe} onChange={e=>setBarbFiltDe(e.target.value)}/>
           <span style={{fontSize:11,color:"#aaa"}}>até</span>
           <input type="date" className="inp" style={{width:"auto",fontSize:12,padding:"5px 8px"}} value={barbFiltAte} onChange={e=>setBarbFiltAte(e.target.value)}/>
-        </div>
+        </div>}
       </div>
-      {melhores.length===0?<div style={{color:"#ccc",fontSize:12,textAlign:"center",padding:10}}>Nenhum lançamento no período selecionado.</div>:melhores.map((d,i)=><div key={d.dt} style={{marginBottom:8}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}><span style={{fontSize:12,fontWeight:600}}>{i+1}º · {new Date(d.dt+"T12:00:00").toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit",year:"numeric",weekday:"short"})}</span><span style={{fontSize:13,fontWeight:700,color:"#d97706"}}>{R(d.val)}</span></div><PB val={d.val} max={maxDia} cor="#d97706" pct={false}/></div>)}
+      {meusMelhoresDiasOpen&&(melhores.length===0?<div style={{color:"#ccc",fontSize:12,textAlign:"center",padding:10}}>Nenhum lançamento no período selecionado.</div>:melhores.map((d,i)=><div key={d.dt} style={{marginBottom:8}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}><span style={{fontSize:12,fontWeight:600}}>{i+1}º · {new Date(d.dt+"T12:00:00").toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit",year:"numeric",weekday:"short"})}</span><span style={{fontSize:13,fontWeight:700,color:"#d97706"}}>{R(d.val)}</span></div><PB val={d.val} max={maxDia} cor="#d97706" pct={false}/></div>))}
     </div>;
   })()}
   <div className="card"><div className="st">💰 Breakdown</div>
@@ -1240,15 +1242,15 @@ export default function App(){
       const melhores=Object.entries(porDia).map(([dt,val])=>({dt,val})).sort((a,b2)=>b2.val-a.val).slice(0,10);
       const maxDia=melhores[0]?.val||1;
       return <div className="card" style={{borderLeft:"4px solid #d97706"}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10,marginBottom:12}}>
-          <div className="st" style={{marginBottom:0}}>🏆 Melhores dias de {bAtSel.nome.split(" ")[0]} <span style={{fontWeight:400,color:"#ccc"}}>(avulso+extras+produtos)</span></div>
-          <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10,marginBottom:melhoresDiasOpen?12:0,cursor:"pointer"}} onClick={()=>setMelhoresDiasOpen(o=>!o)}>
+          <div className="st" style={{marginBottom:0}}>{melhoresDiasOpen?"▼":"▶"} 🏆 Melhores dias de {bAtSel.nome.split(" ")[0]} <span style={{fontWeight:400,color:"#ccc"}}>(avulso+extras+produtos)</span></div>
+          {melhoresDiasOpen&&<div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}} onClick={e=>e.stopPropagation()}>
             <input type="date" className="inp" style={{width:"auto",fontSize:12,padding:"5px 8px"}} value={barbFiltDe} onChange={e=>setBarbFiltDe(e.target.value)}/>
             <span style={{fontSize:11,color:"#aaa"}}>até</span>
             <input type="date" className="inp" style={{width:"auto",fontSize:12,padding:"5px 8px"}} value={barbFiltAte} onChange={e=>setBarbFiltAte(e.target.value)}/>
-          </div>
+          </div>}
         </div>
-        {melhores.length===0?<div style={{color:"#ccc",fontSize:12,textAlign:"center",padding:10}}>Nenhum lançamento no período selecionado.</div>:melhores.map((d,i)=><div key={d.dt} style={{marginBottom:8}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}><span style={{fontSize:12,fontWeight:600}}>{i+1}º · {new Date(d.dt+"T12:00:00").toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit",year:"numeric",weekday:"short"})}</span><span style={{fontSize:13,fontWeight:700,color:"#d97706"}}>{R(d.val)}</span></div><PB val={d.val} max={maxDia} cor="#d97706" pct={false}/></div>)}
+        {melhoresDiasOpen&&(melhores.length===0?<div style={{color:"#ccc",fontSize:12,textAlign:"center",padding:10}}>Nenhum lançamento no período selecionado.</div>:melhores.map((d,i)=><div key={d.dt} style={{marginBottom:8}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}><span style={{fontSize:12,fontWeight:600}}>{i+1}º · {new Date(d.dt+"T12:00:00").toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit",year:"numeric",weekday:"short"})}</span><span style={{fontSize:13,fontWeight:700,color:"#d97706"}}>{R(d.val)}</span></div><PB val={d.val} max={maxDia} cor="#d97706" pct={false}/></div>))}
       </div>;
     })()}
     {(()=>{
