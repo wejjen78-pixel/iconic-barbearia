@@ -857,6 +857,24 @@ export default function App(){
       <div style={{textAlign:"center",padding:"9px 10px",background:"#f0f9ff",borderRadius:8}}><div style={{fontSize:10,color:"#aaa",fontWeight:600,marginBottom:2}}>PROJEÇÃO</div><div style={{fontSize:18,fontWeight:700,color:proj>=meta?"#059669":"#d97706"}}>{R(proj)}</div></div>
     </div>
   </div>
+  {(()=>{
+    const metaQuinz=meta*0.6;
+    const realizadoAte15=gDia.slice(0,15).reduce((a,d)=>a+d.tot,0);
+    const bateu=realizadoAte15>=metaQuinz;
+    const faltaQuinz=Math.max(0,metaQuinz-realizadoAte15);
+    return <div className="card" style={{borderLeft:"4px solid "+(bateu?"#059669":dAt>15?"#dc2626":"#d97706")}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+        <div className="st" style={{marginBottom:0}}>📆 Meta quinzenal (dia 15) — 60% da meta mensal</div>
+        <span style={{fontSize:11,color:"#aaa"}}>{dAt<15?`Faltam ${15-dAt} dia(s) até o corte`:dAt===15?"Hoje é o corte":"Corte já passou"}</span>
+      </div>
+      <div className="g3" style={{marginBottom:10}}>
+        <div style={{textAlign:"center",padding:"9px 10px",background:"#f5f3ff",borderRadius:8}}><div style={{fontSize:10,color:"#7c3aed",fontWeight:700}}>META (60%)</div><div style={{fontSize:18,fontWeight:800,color:"#7c3aed"}}>{R(metaQuinz)}</div></div>
+        <div style={{textAlign:"center",padding:"9px 10px",background:bateu?"#f0fdf4":"#fffbeb",borderRadius:8}}><div style={{fontSize:10,color:bateu?"#059669":"#d97706",fontWeight:700}}>REALIZADO ATÉ DIA 15</div><div style={{fontSize:18,fontWeight:800,color:bateu?"#059669":"#d97706"}}>{R(realizadoAte15)}</div></div>
+        <div style={{textAlign:"center",padding:"9px 10px",background:bateu?"#f0fdf4":"#fef2f2",borderRadius:8}}><div style={{fontSize:10,color:bateu?"#059669":"#dc2626",fontWeight:700}}>FALTA</div><div style={{fontSize:18,fontWeight:800,color:bateu?"#059669":"#dc2626"}}>{bateu?"✓":R(faltaQuinz)}</div></div>
+      </div>
+      <PB val={realizadoAte15} max={metaQuinz} cor={bateu?"#059669":"#7c3aed"} pct lg/>
+    </div>;
+  })()}
   <div className="g4">
     <KPI lbl="💳 Assinatura" val={R(tPote)} cor="#d97706" glow/>
     <KPI lbl="✂️ Avulso+Extras" val={R(tSvcU+tExt)} cor="#7c3aed" glow/>
